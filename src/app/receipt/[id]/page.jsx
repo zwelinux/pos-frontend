@@ -71,7 +71,6 @@ export default function Receipt() {
         setComps([]);
       }
 
-      if (data.paid_at) setTimeout(() => window.print(), 300);
     } catch {
       setErr("Network error while loading receipt.");
     }
@@ -91,7 +90,6 @@ export default function Receipt() {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const updated = await r.json();
       setOrder(updated);
-      setTimeout(() => window.print(), 200);
     } catch {
       alert("Failed to settle the order.");
     } finally {
@@ -198,12 +196,16 @@ export default function Receipt() {
             
             {/* Header Branding */}
             <header className="text-center mb-8">
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-indigo-600 text-white font-black text-2xl shadow-xl shadow-indigo-100 mb-4 rotate-3">
-                J
+              <div className="receipt-screen-brand">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-indigo-600 text-white font-black text-2xl shadow-xl shadow-indigo-100 mb-4 rotate-3">
+                  J
+                </div>
               </div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900 leading-none">Juss Food & Drinks</h1>
-              <div className="mt-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Kitchen & Social House
+              <div className="receipt-brand-copy">
+                <h1 className="mt-1 text-xl font-black tracking-tight text-slate-900 leading-none">Jus Food & Drinks</h1>
+                <div className="mt-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Kitchen & Social House
+                </div>
               </div>
             </header>
 
@@ -406,43 +408,135 @@ export default function Receipt() {
         @media print {
           .print-hide, .no-print { display: none !important; }
           .print-only { display: block !important; }
+          .receipt-paper header { display: block !important; }
+          .receipt-screen-brand { display: none !important; }
+          .receipt-brand-copy {
+            margin-bottom: 4mm !important;
+            padding-bottom: 3mm !important;
+            border-bottom: 1px dashed #a1a1aa !important;
+          }
           
           @page {
             size: 80mm auto;
-            margin: 0;
+            margin: 6mm 4mm 6mm 4mm;
           }
           
+          html, body {
+            background: #fff !important;
+          }
+
           body {
-            background: white !important;
             margin: 0 !important;
             padding: 0 !important;
           }
 
-          .receipt-paper {
-            width: 80mm !important;
+          main {
+            min-height: auto !important;
+            background: #fff !important;
+            padding: 0 !important;
+            display: block !important;
+          }
+
+          main > div,
+          .receipt-paper > div {
+            width: 100% !important;
             max-width: none !important;
-            margin: 0 !important;
+          }
+
+          .receipt-paper {
+            width: auto !important;
+            max-width: none !important;
+            margin: 0 auto !important;
             padding: 0 !important;
             transform: none !important;
             animation: none !important;
           }
 
-          .relative {
+          .receipt-paper .relative {
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
-            padding: 5mm !important;
+            background: #fff !important;
+            padding: 3mm 0 4mm !important;
+            overflow: visible !important;
+          }
+
+          .receipt-paper header {
+            margin-bottom: 5mm !important;
+            padding-top: 2mm !important;
+          }
+
+          .receipt-paper section {
+            margin-bottom: 4mm !important;
+          }
+
+          .receipt-paper .border-y,
+          .receipt-paper .border-t,
+          .receipt-paper .border-t-2 {
+            border-color: #d4d4d8 !important;
+          }
+
+          .receipt-paper .border-dashed {
+            border-style: dashed !important;
+          }
+
+          .receipt-paper .bg-indigo-600,
+          .receipt-paper .bg-emerald-50,
+          .receipt-paper .bg-rose-50,
+          .receipt-paper .bg-amber-50,
+          .receipt-paper .bg-white,
+          .receipt-paper .bg-slate-50\/50,
+          .receipt-paper .bg-slate-50,
+          .receipt-paper .bg-slate-100,
+          .receipt-paper .bg-indigo-50,
+          .receipt-paper .bg-white\/20 {
+            background: transparent !important;
+          }
+
+          .receipt-paper .shadow-xl,
+          .receipt-paper .shadow-2xl,
+          .receipt-paper .shadow-sm,
+          .receipt-paper .shadow-indigo-100,
+          .receipt-paper .shadow-emerald-100,
+          .receipt-paper .shadow-slate-100 {
+            box-shadow: none !important;
+          }
+
+          .receipt-paper .rounded-\[2rem\],
+          .receipt-paper .rounded-\[1\.5rem\],
+          .receipt-paper .rounded-2xl,
+          .receipt-paper .rounded-xl {
+            border-radius: 0 !important;
           }
 
           /* Force black text for contrast on thermal */
-          * {
+          .receipt-paper * {
             color: black !important;
             text-shadow: none !important;
           }
           
-          .text-slate-400, .text-slate-500 {
+          .receipt-paper .text-slate-400,
+          .receipt-paper .text-slate-500,
+          .receipt-paper .text-indigo-500,
+          .receipt-paper .text-indigo-600,
+          .receipt-paper .text-emerald-600,
+          .receipt-paper .text-rose-600,
+          .receipt-paper .text-amber-700 {
              color: #666 !important;
              opacity: 0.8;
+          }
+
+          .receipt-paper .text-3xl {
+            font-size: 24px !important;
+            line-height: 1 !important;
+          }
+
+          .receipt-paper .text-xl {
+            font-size: 18px !important;
+          }
+
+          .receipt-paper .text-sm {
+            font-size: 12px !important;
           }
         }
       `}</style>
