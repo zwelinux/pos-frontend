@@ -132,19 +132,38 @@ export default function KDSClient() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    newOrderAudio.current = new Audio("/sounds/new-order.m4a");
+    newOrderAudio.current = new Audio("/sounds/neworder.mp3");
     readyAudio.current = new Audio("/sounds/order-ready.m4a");
     newOrderAudio.current.preload = "auto";
     readyAudio.current.preload = "auto";
   }, []);
 
+  const primeAudio = async () => {
+    const primeOne = async (el) => {
+      if (!el) return;
+      const prevMuted = el.muted;
+      const prevVolume = el.volume;
+      el.muted = true;
+      el.volume = 0;
+      el.currentTime = 0;
+      await el.play();
+      el.pause();
+      el.currentTime = 0;
+      el.muted = prevMuted;
+      el.volume = prevVolume || 1;
+    };
+
+    await Promise.allSettled([
+      primeOne(newOrderAudio.current),
+      primeOne(readyAudio.current),
+    ]);
+  };
+
   useEffect(() => {
     // Try to prime sound automatically on mount
     const prime = async () => {
       try {
-        await newOrderAudio.current.play();
-        newOrderAudio.current.pause();
-        newOrderAudio.current.currentTime = 0;
+        await primeAudio();
         setUnlocked(true);
         console.log("🔊 Sound auto-primed successfully");
       } catch (err) {
@@ -196,11 +215,7 @@ export default function KDSClient() {
     // Prime the audio silently without actually playing sound
     const prime = async () => {
       try {
-        newOrderAudio.current.volume = 0; // mute before play
-        await newOrderAudio.current.play();
-        newOrderAudio.current.pause();
-        newOrderAudio.current.currentTime = 0;
-        newOrderAudio.current.volume = vol; // restore volume
+        await primeAudio();
         setUnlocked(true);
         console.log("🔊 Sound primed silently");
       } catch (err) {
@@ -234,15 +249,27 @@ export default function KDSClient() {
   const enableSound = async () => {
     setMuted(false);
     try {
-      await newOrderAudio.current.play();
-      newOrderAudio.current.pause();
-      newOrderAudio.current.currentTime = 0;
+      await primeAudio();
       setUnlocked(true);
       console.log("🔓 Sound enabled manually");
     } catch (err) {
       console.warn("⚠️ Still blocked:", err.message);
     }
   };
+
+  useEffect(() => {
+    const onUserGesture = () => {
+      if (!unlocked) enableSound();
+    };
+
+    window.addEventListener("pointerdown", onUserGesture, { passive: true });
+    window.addEventListener("keydown", onUserGesture);
+
+    return () => {
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+    };
+  }, [unlocked]);
 
   // ---------- DATE NAV ----------
   function shiftSelectedDate(days) {

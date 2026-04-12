@@ -12,6 +12,8 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
   const [modSelections, setModSelections] = useState({});
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [popupGroupIds, setPopupGroupIds] = useState([]);
+  const [popupSourceLabel, setPopupSourceLabel] = useState("");
 
   const { showToast } = useToast();
 
@@ -27,6 +29,8 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
         setVariant(null);
         setModSelections({});
         setQty(1);
+        setPopupGroupIds([]);
+        setPopupSourceLabel("");
       } catch (e) {
         console.error("Failed to load product", e);
       }
@@ -46,85 +50,95 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
     });
   }, [variant, product]);
 
-  if (!product) return null;
   const selectedVariantId = variant ? Number(variant) : null;
 
+  const isGroupVisibleForSelections = (group, selections) => {
+    if (!group.show_group) return false;
+    const reqV = group.required_variant_id ? Number(group.required_variant_id) : null;
+    if (reqV !== null && reqV !== selectedVariantId) return false;
+
+    const reqO = group.required_option_ids || [];
+    if (reqO.length > 0 && !reqO.some((id) => selections[id]?.qty > 0)) return false;
+
+    return true;
+  };
+
+  const buildNextSelections = (prev, group, opt) => {
+    const currentQty = prev[opt.id]?.qty || 0;
+    const totalPicks = Object.entries(prev)
+      .filter(([id, v]) => v.qty > 0 && group.options.some((o) => o.id === Number(id)))
+      .reduce((sum, [_, v]) => sum + v.qty, 0);
+
+    // 1. Multi-Click behavior: increment up to group max
+    if (opt.multi_click) {
+      if (totalPicks >= group.max_allowed) {
+        showToast(`⚠️ Maximum ${group.max_allowed} items allowed`);
+        return prev;
+      }
+      return { ...prev, [opt.id]: { qty: currentQty + 1 } };
+    }
+
+    // 2. Single selection group behavior (exclusive toggle within this group)
+    if (group.selection_type === "single") {
+      const next = { ...prev };
+      group.options.forEach((option) => {
+        delete next[option.id];
+      });
+
+      if (currentQty === 0) {
+        next[opt.id] = { qty: 1 };
+      }
+      return next;
+    }
+
+    // 3. Multi selection group behavior (toggle 0/1)
+    if (currentQty > 0) {
+      const next = { ...prev };
+      delete next[opt.id];
+      return next;
+    }
+
+    if (totalPicks >= group.max_allowed) {
+      showToast(`⚠️ Maximum ${group.max_allowed} items allowed`);
+      return prev;
+    }
+
+    return { ...prev, [opt.id]: { qty: 1 } };
+  };
+
   const addOption = (group, opt) => {
-    setModSelections(prev => {
-      const currentQty = prev[opt.id]?.qty || 0;
-      const totalPicks = Object.entries(prev)
-        .filter(([id, v]) => v.qty > 0 && group.options.some(o => o.id === Number(id)))
-        .reduce((sum, [_, v]) => sum + v.qty, 0);
+    const nextSelections = buildNextSelections(modSelections, group, opt);
+    setModSelections(nextSelections);
 
-      // 1. Multi-Click behavior: increment up to group max
-      if (opt.multi_click) {
-        if (totalPicks >= group.max_allowed) {
-          showToast(`⚠️ Maximum ${group.max_allowed} items allowed`);
-          return prev;
-        }
-        return { ...prev, [opt.id]: { qty: currentQty + 1 } };
-      }
+    const triggeredPopupGroups = (product?.modifier_groups || []).filter(
+      (candidate) =>
+        (candidate.required_option_ids || []).includes(opt.id) &&
+        isGroupVisibleForSelections(candidate, nextSelections)
+    );
 
-      // 2. Single selection group behavior (exclusive toggle within this group)
-      if (group.selection_type === "single") {
-        const next = { ...prev };
-        // Remove any existing selection from THIS group
-        group.options.forEach(o => {
-          delete next[o.id];
-        });
-
-        if (currentQty === 0) {
-          next[opt.id] = { qty: 1 };
-        }
-        return next;
-      }
-
-      // 3. Multi selection group behavior (toggle 0/1)
-      if (currentQty > 0) {
-        const next = { ...prev };
-        delete next[opt.id];
-        return next;
-      } else {
-        if (totalPicks >= group.max_allowed) {
-          showToast(`⚠️ Maximum ${group.max_allowed} items allowed`);
-          return prev;
-        }
-        return { ...prev, [opt.id]: { qty: 1 } };
-      }
-    });
+    if (triggeredPopupGroups.length > 0 && nextSelections[opt.id]?.qty > 0) {
+      setPopupGroupIds(triggeredPopupGroups.map((candidate) => candidate.id));
+      setPopupSourceLabel(opt.name || group.name || "Selected Option");
+    }
   };
 
   const removeOption = (optId) => {
-    setModSelections(prev => {
-      if (!prev[optId]) return prev;
-      const next = { ...prev };
-      delete next[optId];
-      return next;
-    });
+    const nextSelections = { ...modSelections };
+    if (!nextSelections[optId]) return;
+    delete nextSelections[optId];
+    setModSelections(nextSelections);
     showToast("♻️ Selection cleared");
   };
 
   const decreaseOption = (group, opt) => {
-    setModSelections(prev => {
-      const currentQty = prev[opt.id]?.qty || 0;
-      if (currentQty <= 1) {
-        const next = { ...prev };
-        delete next[opt.id];
-        return next;
-      }
-      return { ...prev, [opt.id]: { qty: currentQty - 1 } };
-    });
-  };
-
-  const isGroupVisible = (g) => {
-    if (!g.show_group) return false;
-    const reqV = g.required_variant_id ? Number(g.required_variant_id) : null;
-    if (reqV !== null && reqV !== selectedVariantId) return false;
-    
-    const reqO = g.required_option_ids || [];
-    if (reqO.length > 0 && !reqO.some(id => modSelections[id]?.qty > 0)) return false;
-
-    return true;
+    const currentQty = modSelections[opt.id]?.qty || 0;
+    if (currentQty <= 1) {
+      const nextSelections = { ...modSelections };
+      delete nextSelections[opt.id];
+      setModSelections(nextSelections);
+      return;
+    }
+    setModSelections({ ...modSelections, [opt.id]: { qty: currentQty - 1 } });
   };
 
   const getGroupQty = (group) =>
@@ -132,9 +146,13 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
       .filter(([id, v]) => v.qty > 0 && group.options.some(o => o.id === Number(id)))
       .reduce((sum, [_, v]) => sum + v.qty, 0);
 
-  const hasVariantRequired = product.modifier_groups?.some(g => g.required_variant_id) ?? false;
+  const hasVariantRequired = product?.modifier_groups?.some(g => g.required_variant_id) ?? false;
   
-  const visibleGroups = (product.modifier_groups || []).filter(isGroupVisible);
+  const visibleGroups = (product?.modifier_groups || []).filter((group) =>
+    isGroupVisibleForSelections(group, modSelections)
+  );
+  const inlineGroups = visibleGroups.filter((group) => !(group.required_option_ids || []).length);
+  const popupGroups = visibleGroups.filter((group) => popupGroupIds.includes(group.id));
 
   const modifiersValid = visibleGroups.every(g => getGroupQty(g) >= g.min_required);
 
@@ -165,6 +183,23 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
     }
   };
 
+  useEffect(() => {
+    if (!popupGroupIds.length) return;
+
+    const stillVisiblePopupIds = popupGroupIds.filter((groupId) =>
+      visibleGroups.some((group) => group.id === groupId)
+    );
+
+    if (stillVisiblePopupIds.length !== popupGroupIds.length) {
+      setPopupGroupIds(stillVisiblePopupIds);
+      if (stillVisiblePopupIds.length === 0) {
+        setPopupSourceLabel("");
+      }
+    }
+  }, [popupGroupIds, visibleGroups]);
+
+  if (!product) return null;
+
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 mt-12 md:p-8 overflow-hidden">
       <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose} />
@@ -186,11 +221,9 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
               </div>
             )}
           </div>
-          {Number(product.base_price) > 0 && (
-            <p className="mt-6 text-sm font-bold text-slate-400 uppercase tracking-widest">
-              <span className="text-indigo-600">฿{money(product.base_price)}</span>
-            </p>
-          )}
+          <p className="mt-6 text-sm font-bold text-slate-400 uppercase tracking-widest">
+             <span className="text-indigo-600">฿{money(product.base_price)}</span>
+          </p>
         </div>
 
         {/* Scrollable Configuration */}
@@ -223,7 +256,7 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
           )}
 
           {/* Modifier Groups */}
-          {visibleGroups.map((group) => {
+          {inlineGroups.map((group) => {
             const isGroupValid = getGroupQty(group) >= group.min_required;
 
             return (
@@ -342,6 +375,153 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
           </button>
         </div>
       </div>
+
+      {popupGroups.length > 0 && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+            onClick={() => {
+              setPopupGroupIds([]);
+              setPopupSourceLabel("");
+            }}
+          />
+          <div className="relative w-full max-w-xl rounded-[2.5rem] border border-white/20 bg-white/95 p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">
+                  Related Modifiers
+                </div>
+                <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                  {popupSourceLabel || "Customize Selection"}
+                </h3>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  Complete the related options for this selected modifier.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPopupGroupIds([]);
+                  setPopupSourceLabel("");
+                }}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 transition hover:text-slate-700"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="max-h-[65vh] space-y-6 overflow-y-auto pr-1">
+              {popupGroups.map((group) => {
+                const isGroupValid = getGroupQty(group) >= group.min_required;
+
+                return (
+                  <div key={group.id} className="space-y-4 rounded-[2rem] border border-slate-100 bg-slate-50/70 p-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                        {group.name}
+                        {group.min_required > 0 && <span className="ml-1 font-black text-indigo-500">*</span>}
+                      </h3>
+                      {group.min_required > 0 && !isGroupValid && (
+                        <span className="rounded-full border border-rose-100 bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-rose-500">
+                          Required
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {(group.options || []).map((opt) => {
+                        const currentQty = modSelections[opt.id]?.qty || 0;
+
+                        if (opt.multi_click) {
+                          return (
+                            <div
+                              key={opt.id}
+                              className={`flex items-center overflow-hidden rounded-2xl border transition-all duration-300 ${
+                                currentQty > 0
+                                  ? "border-indigo-200 bg-indigo-50 shadow-sm"
+                                  : "border-white/40 bg-white hover:bg-slate-50"
+                              }`}
+                            >
+                              <div className={`px-4 py-3 text-sm font-bold ${currentQty > 0 ? "text-indigo-700" : "text-slate-600"}`}>
+                                {opt.name}
+                                {Number(opt.price_delta) > 0 && (
+                                  <span className="ml-2 rounded-md border border-indigo-100 bg-white px-1.5 py-0.5 text-[10px] font-black text-indigo-600">
+                                    +{money(opt.price_delta)} ฿
+                                  </span>
+                                )}
+                              </div>
+                              <div className="ml-auto flex items-center gap-1 border-l border-white/40 px-3 py-2">
+                                <button
+                                  onClick={() => decreaseOption(group, opt)}
+                                  className={`flex h-8 w-8 items-center justify-center rounded-xl font-bold transition-colors ${
+                                    currentQty > 0
+                                      ? "bg-white text-rose-500 shadow-sm hover:bg-rose-500 hover:text-white"
+                                      : "cursor-not-allowed text-slate-400 opacity-30"
+                                  }`}
+                                  disabled={currentQty === 0}
+                                >
+                                  –
+                                </button>
+                                <span className={`w-8 text-center text-lg font-black ${currentQty > 0 ? "text-indigo-700" : "text-slate-400"}`}>
+                                  {currentQty}
+                                </span>
+                                <button
+                                  onClick={() => addOption(group, opt)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-white font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-600 hover:text-white"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => addOption(group, opt)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              if (currentQty > 0) removeOption(opt.id);
+                            }}
+                            className={`relative overflow-hidden rounded-2xl border px-5 py-3 text-sm font-bold transition-all duration-300 ${
+                              currentQty > 0
+                                ? "border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm"
+                                : "border-white/40 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            {opt.name}
+                            {Number(opt.price_delta) > 0 && (
+                              <span className="ml-2 rounded-md border border-indigo-100 bg-white px-1.5 py-0.5 text-[10px] font-black text-indigo-600">
+                                +{money(opt.price_delta)} ฿
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setPopupGroupIds([]);
+                  setPopupSourceLabel("");
+                }}
+                className="rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-500"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
