@@ -273,13 +273,14 @@ function PageInner() {
                         <div className="line-clamp-1 text-lg font-black tracking-tight text-slate-800">
                           {p.name}
                         </div>
-                        <div className="mt-1 flex items-center justify-center gap-2">
-                          {/* <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Unit Basis</span> */}
-                          <span className="h-1 w-1 rounded-full bg-slate-300" />
-                          <span className="text-sm font-black text-indigo-600">
-                            {formatMoney(p.base_price ?? 0)} ฿
-                          </span>
-                        </div>
+                        {Number(p.base_price ?? 0) > 0 && (
+                          <div className="mt-1 flex items-center justify-center gap-2">
+                            <span className="h-1 w-1 rounded-full bg-slate-300" />
+                            <span className="text-sm font-black text-indigo-600">
+                              {formatMoney(p.base_price ?? 0)} ฿
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </button>
                   ))}
