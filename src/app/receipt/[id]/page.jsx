@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
+import { formatMoney } from "@/lib/money";
 
 /** Modernized Button Component */
 function Btn({ children, className = "", ...props }) {
@@ -169,7 +170,7 @@ export default function Receipt() {
   const isPaid = !!order.paid_at;
   const isTab = order.status === "tab";
 
-  const money = (n) => Number(n || 0).toFixed(2);
+  const money = (n) => formatMoney(n);
   const byId = new Map((order.items || []).map((it) => [it.id, it]));
   function compLabel(c) {
     if (c.scope === "item") {

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
+import { formatMoney } from "@/lib/money";
 
 const STATUSES = ["open", "tab", "paid", "void"];
 
@@ -310,7 +311,7 @@ export default function OrdersDashboard() {
                 <div className="truncate whitespace-nowrap">
                   {r.paid_at ? new Date(r.paid_at).toLocaleString() : "-"}
                 </div>
-                <div className="text-right whitespace-nowrap">{Number(r.total ?? 0).toFixed(2)}</div>
+                <div className="text-right whitespace-nowrap">{formatMoney(r.total ?? 0)}</div>
                 <div className="truncate">{r.payment_method || "-"}</div>
               </div>
 
@@ -377,7 +378,7 @@ export default function OrdersDashboard() {
                                         {group.items.map(({ key, label, modifier }) => {
                                           const priceLabel =
                                             modifier?.include && Number(modifier?.price_delta) !== 0
-                                              ? ` (+${(Number(modifier.price_delta) * (modifier.qty || 1)).toFixed(2)})`
+                                              ? ` (+${formatMoney(Number(modifier.price_delta) * (modifier.qty || 1))})`
                                               : "";
                                           return (
                                             <li key={key}>
@@ -393,8 +394,8 @@ export default function OrdersDashboard() {
                               )}
                             </div>
                             <div>{it.qty}</div>
-                            <div className="text-right">{Number(it.unit_price ?? 0).toFixed(2)}</div>
-                            <div className="text-right">{Number(it.line_total ?? 0).toFixed(2)}</div>
+                            <div className="text-right">{formatMoney(it.unit_price ?? 0)}</div>
+                            <div className="text-right">{formatMoney(it.line_total ?? 0)}</div>
                           </div>
                         ))}
                       </div>
@@ -403,18 +404,18 @@ export default function OrdersDashboard() {
                       <div className="mt-3 ml-auto max-w-xs text-sm">
                         <div className="flex justify-between">
                           <span className="opacity-70">Subtotal</span>
-                          <span>{Number(d.subtotal ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.subtotal ?? 0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="opacity-70">Tax</span>
-                          <span>{Number(d.tax ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.tax ?? 0)}</span>
                         </div>
 
                         {/* FOC / Comps Section (improved labels) */}
                         {d.comps?.length > 0 &&
                           (() => {
                             const byId = new Map((d.items || []).map((it) => [it.id, it]));
-                            const money = (n) => Number(n || 0).toFixed(2);
+                            const money = (n) => formatMoney(n);
 
                             function compLabel(c) {
                               const reason = c.reason ? ` • ${c.reason}` : "";
@@ -471,7 +472,7 @@ export default function OrdersDashboard() {
 
                         <div className="flex justify-between font-semibold border-t pt-2 mt-2">
                           <span>Total</span>
-                          <span>{Number(d.total ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.total ?? 0)}</span>
                         </div>
                       </div>
                     </div>

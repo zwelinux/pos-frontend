@@ -8,6 +8,7 @@ import { authFetch } from "@/lib/auth";
 import AttachTableModal from "@/components/AttachTableModal";
 import Link from "next/link";
 import { useOrder } from "@/store/order";
+import { formatMoney } from "@/lib/money";
 
 // --- helpers: validate modifiers against product's allowed option IDs ---
 async function fetchAllowedOptionIds(apiBase, items) {
@@ -295,8 +296,8 @@ export default function CartPage() {
               </div>
 
               <div className="ml-auto flex items-center gap-4">
-                <span className="text-slate-600">Unit: {Number(i.unit).toFixed(2)}</span>
-                <span className="font-semibold">Line: {Number(i.line).toFixed(2)}</span>
+                <span className="text-slate-600">Unit: {formatMoney(i.unit)}</span>
+                <span className="font-semibold">Line: {formatMoney(i.line)}</span>
               </div>
             </div>
           </div>
@@ -304,7 +305,7 @@ export default function CartPage() {
       </div>
 
       <div className="flex items-center gap-3 mt-5">
-        <div className="text-lg font-semibold">Total: {total().toFixed(2)}</div>
+        <div className="text-lg font-semibold">Total: {formatMoney(total())}</div>
         <button
           disabled={loading || !hasItems}
           onClick={checkout}

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getApiBase } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 export default function PublicMenu() {
   return (
@@ -243,7 +244,7 @@ function PublicMenuInner() {
                         </span>
                         <span className="h-1 w-1 rounded-full bg-slate-300" />
                         <span className="text-sm font-black text-indigo-600">
-                          ฿{Number(p.base_price ?? 0).toFixed(2)}
+                          ฿{formatMoney(p.base_price ?? 0)}
                         </span>
                       </div>
 

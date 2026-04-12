@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 function hasManager(me) {
   const g = me?.groups || [];
@@ -684,7 +685,7 @@ export default function ProductsManagePage() {
                         {row.category_obj?.name || row.category?.name || "Uncategorized"}
                       </span>
                     </td>
-                    <td className="px-8 py-6 font-black text-emerald-600 text-lg">฿{Number(row.base_price ?? 0).toFixed(2)}</td>
+                    <td className="px-8 py-6 font-black text-emerald-600 text-lg">฿{formatMoney(row.base_price ?? 0)}</td>
                     <td className="px-8 py-6">
                       <div className="space-y-1">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{(row.variants || []).length} Variants</div>

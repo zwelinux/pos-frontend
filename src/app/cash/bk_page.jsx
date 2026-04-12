@@ -5,13 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import Link from "next/link";
+import { formatMoney } from "@/lib/money";
 
 function money(n) {
-  const x = Number(n || 0);
-  return x.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatMoney(n);
 }
 
 function Section({ title, children, right = null }) {

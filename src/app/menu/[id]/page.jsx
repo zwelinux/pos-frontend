@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getApiBase } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 export default function ProductDetail() {
   return (
@@ -30,7 +31,7 @@ function DetailSkeleton() {
 }
 
 function money(v) {
-  return Number(v || 0).toFixed(2);
+  return formatMoney(v);
 }
 
 function ProductDetailInner() {

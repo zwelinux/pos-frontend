@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 export default function TabsClient() {
   const [rows, setRows] = useState([]);
@@ -101,7 +102,7 @@ export default function TabsClient() {
               <p className="text-xs uppercase tracking-wide text-slate-500">
                 {mode === "open" ? "Outstanding" : "Paid Sum"}
               </p>
-              <p className="mt-1 text-xl font-semibold text-slate-900">{totalOutstanding.toFixed(2)}</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">{formatMoney(totalOutstanding)}</p>
             </div>
           </div>
         </div>
@@ -213,7 +214,7 @@ export default function TabsClient() {
                   )}
                   <div>
                     <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-                    <p className="text-sm font-semibold text-slate-900">{Number(r.total).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatMoney(r.total)}</p>
                   </div>
                   <div className="sm:col-span-2 lg:col-span-3">
                     <p className="text-xs uppercase tracking-wide text-slate-500">Remark</p>
@@ -272,7 +273,7 @@ export default function TabsClient() {
                             {it.qty}x {it.product_name}
                             {it.variant_name ? ` (${it.variant_name})` : ""}
                           </div>
-                          <div>{Number(it.line_total ?? 0).toFixed(2)}</div>
+                          <div>{formatMoney(it.line_total ?? 0)}</div>
                         </div>
 
                         {it.modifiers?.length > 0 && (
@@ -281,7 +282,7 @@ export default function TabsClient() {
                               const qtyLabel = m.qty > 1 ? ` x${m.qty}` : "";
                               const priceLabel =
                                 m.include && Number(m.price_delta) !== 0
-                                  ? ` (+${(Number(m.price_delta) * (m.qty || 1)).toFixed(2)})`
+                                  ? ` (+${formatMoney(Number(m.price_delta) * (m.qty || 1))})`
                                   : "";
                               return (
                                 <li key={m.option_id}>
@@ -304,15 +305,15 @@ export default function TabsClient() {
                     <hr className="my-2 border-slate-200" />
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{Number(r.subtotal ?? 0).toFixed(2)}</span>
+                      <span>{formatMoney(r.subtotal ?? 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Tax</span>
-                      <span>{Number(r.tax ?? 0).toFixed(2)}</span>
+                      <span>{formatMoney(r.tax ?? 0)}</span>
                     </div>
                     <div className="flex justify-between font-semibold">
                       <span>Total</span>
-                      <span>{Number(r.total ?? 0).toFixed(2)}</span>
+                      <span>{formatMoney(r.total ?? 0)}</span>
                     </div>
 
                     <a

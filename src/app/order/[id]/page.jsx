@@ -7,6 +7,7 @@ import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
 import { useOrder } from "@/store/order";
+import { formatMoney } from "@/lib/money";
 
 export default function OrderPage() {
   const params = useParams();
@@ -82,7 +83,7 @@ export default function OrderPage() {
             </div>
             <div className="text-right">
               <div className="text-sm text-slate-600">Qty: {it.qty}</div>
-              <div className="font-semibold">{Number(it.line_total).toFixed(2)}</div>
+              <div className="font-semibold">{formatMoney(it.line_total)}</div>
             </div>
           </div>
         ))}
@@ -90,7 +91,7 @@ export default function OrderPage() {
 
       <div className="flex items-center gap-3">
         <div className="text-lg font-semibold">
-          Total: {Number(order.total).toFixed(2)}
+          Total: {formatMoney(order.total)}
         </div>
         <div className="ml-auto flex gap-2">
           {!order.table && (

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getApiBase } from "@/lib/api";
 import { authFetch, hasRole } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 // =====================
 // Small UI primitives
@@ -90,11 +91,7 @@ function IconButton({ title, onClick, children, className = "", type = "button" 
 }
 
 // ---------- helpers ----------
-const money = (n) =>
-  Number(n || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const money = (n) => formatMoney(n);
 
 function toLocalISO(date, time) {
   if (!date) return null;

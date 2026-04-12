@@ -11,8 +11,8 @@ export function getApiBase() {
   // Fallbacks:
   // - On the client, you *could* derive from window if you proxy /api — not needed here.
   // - During build/SSR, never throw. Use a safe local default.
-  // return "http://localhost:8000/api";
-  return "https://admin.jusbackend.store/api";
+  return "http://localhost:8000/api";
+  // return "https://admin.jusbackend.store/api";
   // Thank you
 }
 

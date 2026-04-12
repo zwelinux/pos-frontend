@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 const STATUSES = ["open", "tab", "paid", "void"];
 
@@ -205,7 +206,7 @@ export default function OrdersDashboard() {
                 <div className="truncate">{r.customer_name || "-"}</div>
                 {/* <div className="truncate whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</div> */}
                 <div className="truncate whitespace-nowrap">{r.paid_at ? new Date(r.paid_at).toLocaleString() : "-"}</div>
-                <div className="text-right whitespace-nowrap">{Number(r.total ?? 0).toFixed(2)}</div>
+                <div className="text-right whitespace-nowrap">{formatMoney(r.total ?? 0)}</div>
                 <div className="truncate">{r.payment_method || "-"}</div>
                 {/* <div className="text-right">{r.items_count}</div>
                 <div className="flex gap-2">
@@ -250,15 +251,15 @@ export default function OrdersDashboard() {
                                     <li key={m.option_id}>
                                       {m.include ? "" : "No "}
                                       {m.option_name}
-                                      {m.include && Number(m.price_delta) !== 0 ? ` (+${Number(m.price_delta).toFixed(2)})` : ""}
+                                      {m.include && Number(m.price_delta) !== 0 ? ` (+${formatMoney(m.price_delta)})` : ""}
                                     </li>
                                   ))}
                                 </ul>
                               )}
                             </div>
                             <div>{it.qty}</div>
-                            <div className="text-right">{Number(it.unit_price ?? 0).toFixed(2)}</div>
-                            <div className="text-right">{Number(it.line_total ?? 0).toFixed(2)}</div>
+                            <div className="text-right">{formatMoney(it.unit_price ?? 0)}</div>
+                            <div className="text-right">{formatMoney(it.line_total ?? 0)}</div>
                           </div>
                         ))}
                       </div>
@@ -266,15 +267,15 @@ export default function OrdersDashboard() {
                       <div className="mt-3 ml-auto max-w-xs text-sm">
                         <div className="flex justify-between">
                           <span className="opacity-70">Subtotal</span>
-                          <span>{Number(d.subtotal ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.subtotal ?? 0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="opacity-70">Tax</span>
-                          <span>{Number(d.tax ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.tax ?? 0)}</span>
                         </div>
                         <div className="flex justify-between font-semibold">
                           <span>Total</span>
-                          <span>{Number(d.total ?? 0).toFixed(2)}</span>
+                          <span>{formatMoney(d.total ?? 0)}</span>
                         </div>
                       </div>
                     </div>

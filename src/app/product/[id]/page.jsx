@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getProduct } from "@/lib/api";
+import { formatMoney } from "@/lib/money";
 import { useCart } from "@/store/cart";
 
 export default function ProductDetail() {
@@ -102,7 +103,7 @@ export default function ProductDetail() {
             <div>
               <h1 className="text-2xl font-semibold">{product.name}</h1>
               <p className="mt-1 text-neutral-600">
-                Base ฿{Number(product.base_price).toFixed(2)}
+                Base ฿{formatMoney(product.base_price)}
               </p>
             </div>
 
@@ -129,7 +130,7 @@ export default function ProductDetail() {
                     </div>
                     <span className="text-sm text-neutral-600">
                       {v.price_delta >= 0 ? "+" : ""}
-                      {Number(v.price_delta).toFixed(2)}
+                      {formatMoney(v.price_delta)}
                     </span>
                   </label>
                 ))}
@@ -173,7 +174,7 @@ export default function ProductDetail() {
                             </div>
                             <span className="text-sm text-neutral-600">
                               {o.price_delta >= 0 ? "+" : ""}
-                              {Number(o.price_delta).toFixed(2)}
+                              {formatMoney(o.price_delta)}
                             </span>
                           </label>
                         );
@@ -197,7 +198,7 @@ export default function ProductDetail() {
                 />
               </label>
               <div className="font-semibold">
-                Line: ฿{(price * qty).toFixed(2)}
+                Line: ฿{formatMoney(price * qty)}
               </div>
               <button
                 onClick={onAdd}
@@ -220,7 +221,7 @@ export default function ProductDetail() {
             value={qty}
             onChange={(e) => setQty(+e.target.value || 1)}
           />
-          <div className="font-semibold">฿{(price * qty).toFixed(2)}</div>
+          <div className="font-semibold">฿{formatMoney(price * qty)}</div>
           <button
             onClick={onAdd}
             className="ml-auto inline-flex items-center justify-center rounded-xl bg-sky-600 px-5 py-2.5 font-medium text-white hover:bg-sky-700"

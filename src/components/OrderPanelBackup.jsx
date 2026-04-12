@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { useOrder } from "@/store/order";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 
 function money(n) {
-  return Number(n || 0).toFixed(2);
+  return formatMoney(n);
 }
 
 function Btn({ children, className = "", ...props }) {

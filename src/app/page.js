@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useOrder } from "@/store/order";
 import { getCategories, getProducts, getApiBase } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 import OrderPanel from "@/components/OrderPanel";
 import ProductConfigModal from "@/components/ProductConfigModal";
 
@@ -276,7 +277,7 @@ function PageInner() {
                           {/* <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Unit Basis</span> */}
                           <span className="h-1 w-1 rounded-full bg-slate-300" />
                           <span className="text-sm font-black text-indigo-600">
-                            {Number(p.base_price ?? 0).toFixed(2)} ฿
+                            {formatMoney(p.base_price ?? 0)} ฿
                           </span>
                         </div>
                       </div>
@@ -307,7 +308,7 @@ function PageInner() {
                 <div className="text-right">
                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 leading-none mb-1 text-right">Order Total</div>
                   <div className="text-[12px] font-black text-black leading-none">
-                    ฿{Number(order?.total ?? 0).toFixed(2)}
+                    ฿{formatMoney(order?.total ?? 0)}
                   </div>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">

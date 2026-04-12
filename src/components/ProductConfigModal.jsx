@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { useToast } from "@/components/ToastContext";
+import { formatMoney } from "@/lib/money";
 
 export default function ProductConfigModal({ productId, onClose, onAdd }) {
   const [product, setProduct] = useState(null);
@@ -186,7 +187,7 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
             )}
           </div>
           <p className="mt-4 text-sm font-bold text-slate-400 uppercase tracking-widest">
-             <span className="text-indigo-600">฿{Number(product.base_price).toFixed(2)}</span>
+             <span className="text-indigo-600">฿{money(product.base_price)}</span>
           </p>
         </div>
 
@@ -344,6 +345,5 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
 }
 
 function money(n) {
-  const value = Number(n || 0);
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  return formatMoney(n);
 }

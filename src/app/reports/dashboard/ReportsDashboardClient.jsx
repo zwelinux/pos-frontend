@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 import {
   ResponsiveContainer,
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -12,7 +13,7 @@ import {
 } from "recharts";
 
 function fmt(n) {
-  return Number(n || 0).toFixed(2);
+  return formatMoney(n);
 }
 
 const pieColors = ["#0f172a", "#334155", "#475569", "#6366f1", "#14b8a6", "#f59e0b"];

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import { formatMoney } from "@/lib/money";
 import {
   ResponsiveContainer,
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -11,11 +12,7 @@ import {
   BarChart, Bar,
 } from "recharts";
 
-const fmt = (v) =>
-  Number(v || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const fmt = (v) => formatMoney(v);
 
 function todayInBangkok() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
@@ -96,7 +93,7 @@ export default function DailyReport() {
     .reduce((s, c) => s + Number(c.amount || 0), 0);
   const focValue = comps.length ? activeFOC : reportedFOC;
 
-  const money = (n) => Number(n || 0).toFixed(2);
+  const money = (n) => formatMoney(n);
   const sign = (v) => (Number(v) > 0 ? "-" : "");
   const abs = (v) => Math.abs(Number(v || 0));
 

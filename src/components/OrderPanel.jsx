@@ -7,9 +7,10 @@ import { useOrder } from "@/store/order";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
+import { formatMoney } from "@/lib/money";
 
 function money(n) {
-  return Number(n || 0).toFixed(2);
+  return formatMoney(n);
 }
 
 /** Modernized Button Component */
