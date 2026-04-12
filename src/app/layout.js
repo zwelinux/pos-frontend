@@ -63,27 +63,11 @@
 //   );
 // }
 
-
-
-
-import { Instrument_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import NavbarAuthed from "@/components/NavbarAuthed";
 import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import { Suspense } from "react";
 import { ToastProvider } from "@/components/ToastContext";
-
-const instrumentSans = Instrument_Sans({ 
-  variable: "--font-instrument", 
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const inter = Inter({ 
-  variable: "--font-inter", 
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata = {
   title: "JusPOS | Modern Point of Sale",
@@ -101,12 +85,10 @@ export default function RootLayout({ children }) {
     <html lang="my" className="scroll-smooth">
       <body
         className={`
-          ${instrumentSans.variable}
-          ${inter.variable}
           antialiased text-slate-900
           mesh-bg min-h-screen overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900
         `}
-        style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
+        style={{ fontFamily: "system-ui, sans-serif" }}
       >
         <ToastProvider>
           <ServiceWorkerCleanup />
