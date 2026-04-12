@@ -186,7 +186,7 @@ export default function ProductConfigModal({ productId, onClose, onAdd }) {
               </div>
             )}
           </div>
-          <p className="mt-4 text-sm font-bold text-slate-400 uppercase tracking-widest">
+          <p className="mt-6 text-sm font-bold text-slate-400 uppercase tracking-widest">
              <span className="text-indigo-600">฿{money(product.base_price)}</span>
           </p>
         </div>
