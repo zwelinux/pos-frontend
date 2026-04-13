@@ -4,6 +4,14 @@ import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { formatMoney } from "@/lib/money";
 
+function formatPaymentMethodLabel(value) {
+  const method = String(value || "").toLowerCase();
+  if (!method) return "-";
+  if (method === "pending") return "Pay Later";
+  if (method === "qr") return "Thai QR";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+}
+
 export default function TabsClient() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
@@ -209,7 +217,7 @@ export default function TabsClient() {
                   {mode === "paid" && (
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500">Method</p>
-                      <p className="text-sm text-slate-800">{(r.payment_method || "-").toUpperCase()}</p>
+                      <p className="text-sm text-slate-800">{formatPaymentMethodLabel(r.payment_method)}</p>
                     </div>
                   )}
                   <div>

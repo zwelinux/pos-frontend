@@ -20,6 +20,14 @@ function todayInBangkok() {
 
 const pieColors = ["#0f172a", "#334155", "#475569", "#6366f1", "#14b8a6", "#f59e0b"];
 
+function formatPaymentMethodLabel(value) {
+  const method = String(value || "").toLowerCase();
+  if (!method) return "unknown";
+  if (method === "pending") return "Pay Later";
+  if (method === "qr") return "Thai QR";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+}
+
 export default function DailyReport() {
   const [date, setDate] = useState(todayInBangkok());
   const [data, setData] = useState(null);
@@ -55,7 +63,7 @@ export default function DailyReport() {
   }, []);
 
   const byPayment = (data?.by_payment ?? []).map((p) => ({
-    name: p.payment_method || "unknown",
+    name: formatPaymentMethodLabel(p.payment_method),
     value: Number(p.total || 0),
   }));
 
@@ -233,7 +241,7 @@ export default function DailyReport() {
                         <div key={i} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                           <div>
                             <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
-                              {p.payment_method || "unknown"}
+                              {formatPaymentMethodLabel(p.payment_method)}
                             </div>
                             <div className="mt-1 text-sm font-semibold text-slate-600">{p.count} payments</div>
                           </div>

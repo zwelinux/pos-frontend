@@ -16,6 +16,14 @@ function fmt(n) {
   return formatMoney(n);
 }
 
+function formatPaymentMethodLabel(value) {
+  const method = String(value || "").toLowerCase();
+  if (!method) return "unknown";
+  if (method === "pending") return "Pay Later";
+  if (method === "qr") return "Thai QR";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+}
+
 const pieColors = ["#0f172a", "#334155", "#475569", "#6366f1", "#14b8a6", "#f59e0b"];
 
 export default function ReportsDashboardClient() {
@@ -49,7 +57,7 @@ export default function ReportsDashboardClient() {
   }, []); // initial
 
   const salesDaily = (data?.totals_by_day ?? []).map((d) => ({ date: d.date, total: Number(d.total || 0) }));
-  const paymentsPie = (data?.payments ?? []).map((p) => ({ name: p.payment_method || "unknown", value: Number(p.total || 0) }));
+  const paymentsPie = (data?.payments ?? []).map((p) => ({ name: formatPaymentMethodLabel(p.payment_method), value: Number(p.total || 0) }));
 
   const days = useMemo(() => {
     const out = [];

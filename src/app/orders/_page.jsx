@@ -6,6 +6,14 @@ import { formatMoney } from "@/lib/money";
 
 const STATUSES = ["open", "tab", "paid", "void"];
 
+function formatPaymentMethodLabel(value) {
+  const method = String(value || "").toLowerCase();
+  if (!method) return "-";
+  if (method === "pending") return "Pay Later";
+  if (method === "qr") return "Thai QR";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+}
+
 // one place to keep the same column template for header + rows
 const COLS =
   "grid grid-cols-[minmax(210px,1.6fr)_minmax(90px,0.8fr)_minmax(120px,1fr)_minmax(160px,1.2fr)_minmax(200px,1.4fr)_minmax(200px,1.4fr)_minmax(90px,0.9fr)_minmax(90px,0.9fr)_minmax(60px,0.6fr)_minmax(110px,0.9fr)]";
@@ -207,7 +215,7 @@ export default function OrdersDashboard() {
                 {/* <div className="truncate whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</div> */}
                 <div className="truncate whitespace-nowrap">{r.paid_at ? new Date(r.paid_at).toLocaleString() : "-"}</div>
                 <div className="text-right whitespace-nowrap">{formatMoney(r.total ?? 0)}</div>
-                <div className="truncate">{r.payment_method || "-"}</div>
+                <div className="truncate">{formatPaymentMethodLabel(r.payment_method)}</div>
                 {/* <div className="text-right">{r.items_count}</div>
                 <div className="flex gap-2">
                   <a href={`/receipt/${r.id}`} className="underline text-sky-700">Receipt</a>
