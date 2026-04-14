@@ -36,11 +36,15 @@ function NavbarInner({
   session,
 }) {
   const [open, setOpen] = useState(false);
+  const [mobileOpenGroups, setMobileOpenGroups] = useState({});
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   // close menu on navigation/search change
-  useEffect(() => setOpen(false), [pathname, searchParams?.toString()]);
+  useEffect(() => {
+    setOpen(false);
+    setMobileOpenGroups({});
+  }, [pathname, searchParams?.toString()]);
 
   // lock body scroll while menu open
   useEffect(() => {
@@ -134,17 +138,49 @@ function NavbarInner({
       </div>
       {links.map((l) => (
         <div key={l.href}>
-          <Link
-            href={l.href}
-            className={`flex px-4 py-3 text-base font-semibold transition-colors ${
-              pathname.startsWith(l.href) ? "bg-indigo-50 text-indigo-600" : "text-slate-700 hover:bg-slate-50"
-            }`}
-            onClick={() => setOpen(false)}
-          >
-            {l.label}
-          </Link>
+          <div className="flex items-center">
+            <Link
+              href={l.href}
+              className={`flex-1 px-4 py-3 text-base font-semibold transition-colors ${
+                pathname.startsWith(l.href) ? "bg-indigo-50 text-indigo-600" : "text-slate-700 hover:bg-slate-50"
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              {l.label}
+            </Link>
+            {l.sub ? (
+              <button
+                type="button"
+                aria-label={`Toggle ${l.label} submenu`}
+                onClick={() =>
+                  setMobileOpenGroups((current) => ({
+                    ...current,
+                    [l.href]: !current[l.href],
+                  }))
+                }
+                className={`mr-2 inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                  mobileOpenGroups[l.href]
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className={`h-5 w-5 transition-transform ${mobileOpenGroups[l.href] ? "rotate-180" : ""}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            ) : null}
+          </div>
           {l.sub ? (
-            <div className="pb-2">
+            <div className={`${mobileOpenGroups[l.href] ? "block" : "hidden"} pb-2`}>
               {l.sub.map((s) => (
                 <Link
                   key={s.href}
