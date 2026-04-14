@@ -16,6 +16,29 @@ function fmt(n) {
   return formatMoney(n);
 }
 
+function dateInBangkok(offsetDays = 0) {
+  const now = new Date();
+  const bangkokNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+  bangkokNow.setDate(bangkokNow.getDate() + offsetDays);
+  const year = bangkokNow.getFullYear();
+  const month = String(bangkokNow.getMonth() + 1).padStart(2, "0");
+  const day = String(bangkokNow.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateInput(value) {
+  const [year, month, day] = String(value || "").split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function formatPaymentMethodLabel(value) {
   const method = String(value || "").toLowerCase();
   if (!method) return "unknown";
@@ -27,8 +50,8 @@ function formatPaymentMethodLabel(value) {
 const pieColors = ["#0f172a", "#334155", "#475569", "#6366f1", "#14b8a6", "#f59e0b"];
 
 export default function ReportsDashboardClient() {
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const weekAgoISO = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const todayISO = dateInBangkok();
+  const weekAgoISO = dateInBangkok(-6);
 
   const [start, setStart] = useState(weekAgoISO);
   const [end, setEnd] = useState(todayISO);
@@ -61,9 +84,12 @@ export default function ReportsDashboardClient() {
 
   const days = useMemo(() => {
     const out = [];
-    const d0 = new Date(data?.range?.start || start);
-    const d1 = new Date(data?.range?.end || end);
-    for (let d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) out.push(d.toISOString().slice(0, 10));
+    const d0 = parseDateInput(data?.range?.start || start);
+    const d1 = parseDateInput(data?.range?.end || end);
+    if (!d0 || !d1) return out;
+    for (let d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) {
+      out.push(formatDateInput(d));
+    }
     return out;
   }, [data, start, end]);
 
