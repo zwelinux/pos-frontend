@@ -46,6 +46,8 @@ export default function Receipt() {
   const [settling, setSettling] = useState(false);
   const [voiding, setVoiding] = useState(false);
   const [tabBusy, setTabBusy] = useState(false);
+  const [cashModalOpen, setCashModalOpen] = useState(false);
+  const [cashReceived, setCashReceived] = useState("");
 
   const load = useCallback(async () => {
     setErr("");
@@ -95,6 +97,23 @@ export default function Receipt() {
     } finally {
       setSettling(false);
     }
+  }
+
+  function openCashModal() {
+    if (!order || settling || order.status === "void") return;
+    setCashReceived(String(Number(order.total || 0)));
+    setCashModalOpen(true);
+  }
+
+  async function confirmCashSettle() {
+    const total = Number(order?.total || 0);
+    const received = Number(cashReceived || 0);
+    if (received < total) {
+      alert("Received amount is less than total.");
+      return;
+    }
+    await settle("cash");
+    setCashModalOpen(false);
   }
 
   async function voidOrder() {
@@ -169,6 +188,9 @@ export default function Receipt() {
   const isTab = order.status === "tab";
 
   const money = (n) => formatMoney(n);
+  const totalDue = Number(order?.total || 0);
+  const receivedAmount = Number(cashReceived || 0);
+  const changeAmount = Math.max(0, receivedAmount - totalDue);
   const byId = new Map((order.items || []).map((it) => [it.id, it]));
   function compLabel(c) {
     if (c.scope === "item") {
@@ -187,6 +209,90 @@ export default function Receipt() {
 
   return (
     <main className="min-h-screen bg-slate-50/50 py-12 px-4 selection:bg-indigo-100 flex items-start justify-center">
+      {cashModalOpen && !isPaid && !isVoided && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm no-print">
+          <div className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Cash Settle</div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Cash Calculator</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCashModalOpen(false)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Total Due</div>
+                <div className="mt-2 text-3xl font-black tracking-tight text-slate-900">฿{money(totalDue)}</div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  Cash Received
+                </label>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-black text-emerald-600">฿</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={cashReceived}
+                      onChange={(e) => setCashReceived(e.target.value)}
+                      className="w-full bg-transparent text-3xl font-black tracking-tight text-slate-900 outline-none"
+                      placeholder="0"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                {[totalDue, 100, 500, 1000].map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => setCashReceived(String(amount))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-black text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                  >
+                    ฿{money(amount)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-4 py-4">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500">Change</div>
+                <div className="mt-2 text-3xl font-black tracking-tight text-emerald-700">฿{money(changeAmount)}</div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setCashModalOpen(false)}
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={settling || receivedAmount < totalDue}
+                onClick={confirmCashSettle}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-emerald-600 text-[11px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-emerald-100 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {settling ? "Working..." : "Confirm Cash"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-16 max-w-6xl w-full justify-center">
         
         {/* Receipt Paper Container */}
@@ -326,7 +432,7 @@ export default function Receipt() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={() => settle("cash")}
+                  onClick={openCashModal}
                   disabled={settling}
                   className="group relative flex flex-col items-center justify-center gap-3 rounded-[2.5rem] bg-emerald-600 py-8 px-4 text-white shadow-2xl shadow-emerald-200/50 transition-all hover:bg-emerald-500 hover:-translate-y-1.5 active:translate-y-0.5 disabled:opacity-50"
                 >

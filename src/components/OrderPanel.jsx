@@ -333,7 +333,7 @@ export default function OrderPanel({ onClose }) {
              <div className="text-2xl font-black text-slate-900 tracking-tight">Active Order</div>
              <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-               Current: <span className="text-slate-600 font-black">{tableName}</span>
+               <span className="text-slate-600 font-black">{tableName}</span>
              </div>
            </div>
            <div className="flex items-center gap-2">
@@ -378,7 +378,8 @@ export default function OrderPanel({ onClose }) {
                   <div className="flex justify-between items-start gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-black text-slate-800">
-                        {it.product_name}
+                        {/* {it.product_name} {Number(it.qty)} × {money(it.unit_price)} */}
+                        {it.product_name} x {Number(it.qty)}
                       </div>
                       {it.variant_name && (
                         <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">
@@ -415,9 +416,9 @@ export default function OrderPanel({ onClose }) {
                           `฿${money(it.line_total)}`
                         )}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400">
+                      {/* <div className="text-[10px] font-bold text-slate-400">
                         {Number(it.qty)} × {money(it.unit_price)}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </li>
