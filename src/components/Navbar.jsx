@@ -53,7 +53,14 @@ function NavbarInner({
 
   // --- Links and logic (unchanged) ---
   const coreLinks = [
-    { href: "/kds/all", label: "KDS" },
+    {
+      href: "/kds/by-table",
+      label: "KDS",
+      sub: [
+        { href: "/kds/by-table", label: "By Table" },
+        { href: "/kds/all", label: "Original KDS" },
+      ],
+    },
     {
       href: `/tables?next=${encodeURIComponent(nextAfterTables)}`,
       label: "Tables",
@@ -126,15 +133,33 @@ function NavbarInner({
         {groupTitle}
       </div>
       {links.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={`flex px-4 py-3 text-base font-semibold transition-colors ${pathname.startsWith(l.href) ? "bg-indigo-50 text-indigo-600" : "text-slate-700 hover:bg-slate-50"
+        <div key={l.href}>
+          <Link
+            href={l.href}
+            className={`flex px-4 py-3 text-base font-semibold transition-colors ${
+              pathname.startsWith(l.href) ? "bg-indigo-50 text-indigo-600" : "text-slate-700 hover:bg-slate-50"
             }`}
-          onClick={() => setOpen(false)}
-        >
-          {l.label}
-        </Link>
+            onClick={() => setOpen(false)}
+          >
+            {l.label}
+          </Link>
+          {l.sub ? (
+            <div className="pb-2">
+              {l.sub.map((s) => (
+                <Link
+                  key={s.href}
+                  href={s.href}
+                  className={`flex px-8 py-2 text-sm font-medium transition-colors ${
+                    pathname.startsWith(s.href) ? "text-indigo-600" : "text-slate-500 hover:text-indigo-600"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {s.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       ))}
     </div>
   );

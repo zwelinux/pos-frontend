@@ -1,0 +1,360 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { API } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
+
+function todayInBangkok() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+}
+
+function toDateOnly(value) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function groupModifierLines(modifiers = []) {
+  const groups = modifiers.reduce((acc, modifier, index) => {
+    const showTitle = modifier?.show_title !== false;
+    const title = showTitle ? modifier?.group_name || "OPTIONS" : null;
+    const key = title || `__hidden__${index}`;
+    if (!acc[key]) acc[key] = { title, items: [] };
+
+    const qty = Number(modifier?.qty || 1);
+    const prefix = modifier?.include ? "" : "No ";
+    acc[key].items.push(`${prefix}${modifier?.option_name || ""}${qty > 1 ? ` ×${qty}` : ""}`);
+    return acc;
+  }, {});
+
+  return Object.values(groups)
+    .map((group) => {
+      const line = group.items.join(", ");
+      return group.title ? `${group.title}: ${line}` : line;
+    })
+    .filter(Boolean);
+}
+
+function buildItemKey(ticket) {
+  const modifierKey = (ticket.modifiers || [])
+    .map((modifier) => [
+      modifier?.group_name || "",
+      modifier?.option_name || "",
+      modifier?.include !== false ? "1" : "0",
+      Number(modifier?.qty || 1),
+      modifier?.show_title !== false ? "1" : "0",
+    ].join("::"))
+    .sort()
+    .join("||");
+
+  return [
+    ticket.product_name || "",
+    ticket.variant_name || "",
+    modifierKey,
+    ticket.status || "",
+  ].join("__");
+}
+
+function groupTicketsIntoOrders(tickets) {
+  const groups = new Map();
+
+  for (const ticket of tickets) {
+    const tableName = ticket.table_name || "Takeaway";
+    const orderNumber = ticket.order_number || "Unknown";
+    const key = `${tableName}__${orderNumber}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        tableName,
+        orderNumber,
+        createdAt: ticket.created_at,
+        tickets: [],
+      });
+    }
+
+    const group = groups.get(key);
+    group.tickets.push(ticket);
+    if (ticket.created_at && new Date(ticket.created_at) < new Date(group.createdAt)) {
+      group.createdAt = ticket.created_at;
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((group) => {
+      const itemMap = new Map();
+
+      for (const ticket of group.tickets) {
+        if (ticket.status === "cancelled" || ticket.isVoided) continue;
+
+        const itemKey = buildItemKey(ticket);
+        if (!itemMap.has(itemKey)) {
+          itemMap.set(itemKey, {
+            key: itemKey,
+            productName: ticket.product_name,
+            variantName: ticket.variant_name,
+            modifiers: ticket.modifiers || [],
+            qty: 0,
+            ticketIds: [],
+            doneCount: 0,
+            activeCount: 0,
+          });
+        }
+
+        const item = itemMap.get(itemKey);
+        item.qty += Number(ticket.qty || 1);
+        item.ticketIds.push(ticket.id);
+        if (ticket.status === "done") item.doneCount += 1;
+        else item.activeCount += 1;
+      }
+
+      const items = Array.from(itemMap.values()).sort((a, b) => {
+        if (a.activeCount > 0 && b.activeCount === 0) return -1;
+        if (a.activeCount === 0 && b.activeCount > 0) return 1;
+        return String(a.productName || "").localeCompare(String(b.productName || ""));
+      });
+
+      const activeTicketIds = group.tickets
+        .filter((ticket) => ticket.status !== "done" && ticket.status !== "cancelled" && !ticket.isVoided)
+        .map((ticket) => ticket.id);
+
+      return {
+        ...group,
+        items,
+        activeTicketIds,
+        activeCount: activeTicketIds.length,
+      };
+    })
+    .filter((group) => group.items.length > 0)
+    .sort((a, b) => {
+      if (a.activeCount > 0 && b.activeCount === 0) return -1;
+      if (a.activeCount === 0 && b.activeCount > 0) return 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+}
+
+function prettyAge(value) {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
+export default function KDSByTablePage() {
+  const [tickets, setTickets] = useState([]);
+  const [stations, setStations] = useState([{ slug: "ALL", name: "ALL" }]);
+  const [selectedStation, setSelectedStation] = useState("ALL");
+  const [selectedDate, setSelectedDate] = useState(todayInBangkok());
+  const [loading, setLoading] = useState(true);
+  const [busyIds, setBusyIds] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await authFetch(`${API}/kitchen-stations/`);
+      const json = await res.json();
+      const unique = new Map();
+      [{ slug: "ALL", name: "ALL" }, ...(json.stations || [])].forEach((station) => unique.set(station.slug, station));
+      setStations([...unique.values()]);
+    })();
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+
+    const load = async () => {
+      try {
+        const res = await authFetch(`${API}/kitchen-tickets/?date=${selectedDate}`);
+        const data = await res.json();
+        if (alive) setTickets(Array.isArray(data) ? data : []);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    load();
+    const timer = setInterval(load, 5000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [selectedDate]);
+
+  const filteredTickets = useMemo(
+    () =>
+      tickets
+        .filter((ticket) => (selectedStation === "ALL" ? true : ticket.station === selectedStation))
+        .filter((ticket) => toDateOnly(ticket.created_at || ticket.started_at) === selectedDate),
+    [tickets, selectedStation, selectedDate]
+  );
+
+  const groupedOrders = useMemo(() => groupTicketsIntoOrders(filteredTickets), [filteredTickets]);
+
+  async function markDone(ticketIds) {
+    const ids = Array.isArray(ticketIds) ? ticketIds : [ticketIds];
+    if (!ids.length) return;
+
+    setBusyIds((current) => [...current, ...ids]);
+    setTickets((prev) =>
+      prev.map((ticket) =>
+        ids.includes(ticket.id) ? { ...ticket, status: "done", done_at: new Date().toISOString() } : ticket
+      )
+    );
+
+    try {
+      await Promise.all(
+        ids.map((ticketId) =>
+          authFetch(`${API}/kitchen-tickets/${ticketId}/`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "done" }),
+          })
+        )
+      );
+    } finally {
+      setBusyIds((current) => current.filter((id) => !ids.includes(id)));
+    }
+  }
+
+  return (
+    <main className="mesh-bg min-h-[calc(100vh-80px)] overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mb-6 flex flex-col gap-4 rounded-[2.5rem] glass border-white/20 p-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-50/50 px-3 py-1 shadow-sm">
+              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-indigo-600">Kitchen Orders</span>
+            </div>
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">KDS By Table</h1>
+            <p className="mt-2 text-sm text-slate-500">Grouped by table number and order receipt, using the same KDS visual language.</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/kds/all"
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/50 bg-white/70 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 transition hover:text-indigo-600"
+            >
+              Original KDS
+            </Link>
+            <select
+              value={selectedStation}
+              onChange={(e) => setSelectedStation(e.target.value)}
+              className="h-11 rounded-2xl glass border-white/40 px-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
+            >
+              {stations.map((station) => (
+                <option key={station.slug} value={station.slug}>
+                  {station.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="h-11 rounded-2xl glass border-white/40 px-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-2 w-24 rounded-full bg-indigo-500/20 animate-pulse" />
+          </div>
+        ) : null}
+
+        {!loading && groupedOrders.length === 0 ? (
+          <div className="glass rounded-[2.5rem] border-white/20 p-12 text-center">
+            <div className="text-xl font-black text-slate-900">Queue Open</div>
+            <div className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">No grouped table orders</div>
+          </div>
+        ) : null}
+
+        {!loading && groupedOrders.length > 0 ? (
+          <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {groupedOrders.map((group) => {
+              const isBusy = group.activeTicketIds.some((id) => busyIds.includes(id));
+              const isDone = group.activeCount === 0;
+
+              return (
+                <article
+                  key={group.key}
+                  className="overflow-hidden rounded-[2.3rem] glass border-white/30 shadow-xl shadow-slate-200/60"
+                >
+                  <div className={`flex items-center justify-between px-5 py-4 ${isDone ? "bg-emerald-50" : "bg-amber-50"}`}>
+                    <div>
+                      <div className="text-2xl font-black tracking-tight text-slate-900">{group.tableName}</div>
+                      <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                        Order {group.orderNumber}
+                      </div>
+                    </div>
+                    <div className="text-sm font-black text-slate-600">{prettyAge(group.createdAt)}</div>
+                  </div>
+
+                  <div className="bg-white/95 px-5 py-5">
+                    <div className="mb-4 flex items-center justify-between">
+                      <span
+                        className={`rounded-full px-4 py-2 text-sm font-black ${
+                          isDone ? "bg-emerald-100 text-emerald-700" : "bg-lime-100 text-lime-700"
+                        }`}
+                      >
+                        {isDone ? "Done" : "Ready"}
+                      </span>
+                      <span className="text-sm font-black text-slate-400">
+                        {group.activeCount} active
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {group.items.map((item) => {
+                        const modifierLines = groupModifierLines(item.modifiers);
+                        return (
+                          <div key={item.key} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-[15px] font-black leading-tight text-slate-900">
+                                  {item.qty}x {item.productName}
+                                </div>
+                                {item.variantName ? (
+                                  <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-500">
+                                    {item.variantName}
+                                  </div>
+                                ) : null}
+                                {modifierLines.map((line, index) => (
+                                  <div key={`${item.key}-${index}`} className="mt-1 text-[11px] font-bold text-slate-500">
+                                    {line}
+                                  </div>
+                                ))}
+                              </div>
+                              <div
+                                className={`mt-1 h-3 w-3 shrink-0 rounded-full ${
+                                  item.activeCount > 0 ? "bg-amber-500" : "bg-emerald-500"
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isDone || isBusy}
+                      onClick={() => markDone(group.activeTicketIds)}
+                      className={`mt-5 w-full rounded-[1.6rem] border px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                        isDone
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-50"
+                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                    >
+                      {isDone ? "Completed" : "Mark As Done"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        ) : null}
+      </div>
+    </main>
+  );
+}

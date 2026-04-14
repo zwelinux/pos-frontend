@@ -98,7 +98,15 @@ export default function KDSStationsClient() {
 
   return (
     <main className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6 text-center">Kitchen Stations</h1>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold text-center sm:text-left">Kitchen Stations</h1>
+        <Link
+          href="/kds/by-table"
+          className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700 transition hover:bg-slate-50"
+        >
+          KDS By Table
+        </Link>
+      </div>
 
       {err && <div className="text-red-600 mb-4 text-center">{err}</div>}
 
