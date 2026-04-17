@@ -373,7 +373,7 @@ export default function Receipt() {
                         </div>
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
-                        <div className="mt-3 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="mt-3 space-y-1 text-sm font-bold text-slate-900 uppercase tracking-wider">
                           {it.variant_name && <div className="text-black text-sm">{it.variant_name}</div>}
                           {Object.values(groupModifiersForDisplay(it.modifiers || [])).map((group) => (
                             <div key={group.key} className="flex flex-wrap gap-1">
