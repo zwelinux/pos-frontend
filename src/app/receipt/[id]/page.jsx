@@ -319,15 +319,15 @@ export default function Receipt() {
             <section className="flex flex-col gap-1.5 mb-8 text-[10px] font-bold uppercase tracking-widest text-slate-500 border-y border-slate-50 py-4">
               <div className="flex justify-between">
                 {/* <span>Order Ref</span> */}
-                <span className="font-black text-slate-900">#{order.id} / {order.number}</span>
+                <span className="font-bold text-sm text-slate-900">#{order.id} / {order.number}</span>
               </div>
               <div className="flex justify-between">
                 {/* <span>Station</span> */}
-                <span className="font-black text-slate-900">{order.table_name || order.table?.name || "TAKEAWAY"}</span>
+                <span className="font-bold text-sm text-slate-900">{order.table_name || order.table?.name || "TAKEAWAY"}</span>
               </div>
               <div className="flex justify-between">
                 {/* <span>Date</span> */}
-                <span className="font-black text-slate-900">
+                <span className="font-bold text-sm text-slate-900">
                   {new Date(order.created_at || Date.now()).toLocaleDateString('en-GB')} {new Date(order.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -369,7 +369,7 @@ export default function Receipt() {
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
                         <div className="mt-1 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                          {it.variant_name && <div className="text-indigo-500">{it.variant_name}</div>}
+                          {it.variant_name && <div className="text-black">{it.variant_name}</div>}
                           {Object.values(groupModifiersForDisplay(it.modifiers || [])).map((group) => (
                             <div key={group.key} className="flex flex-wrap gap-1">
                               {group.title && (
