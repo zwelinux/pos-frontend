@@ -316,7 +316,7 @@ export default function Receipt() {
             </header>
 
             {/* Metadata Section */}
-            <section className="flex flex-col gap-1.5 mb-8 text-[10px] font-bold uppercase tracking-widest text-slate-500 border-y border-slate-50 py-4">
+            <section className="flex flex-col gap-1.5 mb-8 text-[10px] font-bold uppercase tracking-widest border-y border-slate-50 py-4">
               <div className="flex justify-between">
                 {/* <span>Order Ref</span> */}
                 <span className="text-sm font-black text-slate-900">#{order.id} / {order.number}</span>
