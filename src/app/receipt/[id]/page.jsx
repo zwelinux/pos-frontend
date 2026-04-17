@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
-import AttachTableModal from "@/components/AttachTableModal";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
 import { formatMoney } from "@/lib/money";
 
@@ -49,7 +48,6 @@ export default function Receipt() {
   const [tabBusy, setTabBusy] = useState(false);
   const [cashModalOpen, setCashModalOpen] = useState(false);
   const [cashReceived, setCashReceived] = useState("");
-  const [tableModalOpen, setTableModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setErr("");
@@ -188,7 +186,6 @@ export default function Receipt() {
   const isVoided = order.status === "void";
   const isPaid = !!order.paid_at;
   const isTab = order.status === "tab";
-  const canSwitchTable = !isPaid && !isVoided;
 
   const money = (n) => formatMoney(n);
   const totalDue = Number(order?.total || 0);
@@ -212,20 +209,6 @@ export default function Receipt() {
 
   return (
     <main className="min-h-screen bg-slate-50/50 py-12 px-4 selection:bg-indigo-100 flex items-start justify-center">
-      {tableModalOpen && canSwitchTable ? (
-        <AttachTableModal
-          order={order}
-          defaultTableId={order?.table?.id || null}
-          title="Switch Table"
-          confirmLabel="Move here"
-          onDone={(updatedOrder) => {
-            setOrder(updatedOrder);
-            setTableModalOpen(false);
-          }}
-          onCancel={() => setTableModalOpen(false)}
-        />
-      ) : null}
-
       {cashModalOpen && !isPaid && !isVoided && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm no-print">
           <div className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl">
@@ -372,17 +355,6 @@ export default function Receipt() {
                     <div className="text-xl font-black mt-1">COMPLETED</div>
                   </div>
                 )}
-              </div>
-            )}
-
-            {canSwitchTable && (
-              <div className="mb-8 no-print">
-                <GhostBtn
-                  className="w-full justify-center rounded-2xl py-3 text-sm"
-                  onClick={() => setTableModalOpen(true)}
-                >
-                  Switch Table
-                </GhostBtn>
               </div>
             )}
 
