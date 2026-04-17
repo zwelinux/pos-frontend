@@ -376,7 +376,7 @@ export default function Receipt() {
                                 <span className="text-slate-900 text-sm">{group.title}</span>
                               )}
                               {group.items.map(({ key, label }) => (
-                                <span key={key} className="before:content-['·'] before:mr-1 truncate max-w-[120px]">
+                                <span key={key} className="before:content-['·'] before:mr-1 truncate max-w-[120px] text-slate-900 text-sm font-bold">
                                   {label}
                                 </span>
                               ))}
@@ -386,10 +386,11 @@ export default function Receipt() {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-sm font-black text-slate-900">฿{money(it.line_total)}</div>
+                      
                       <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                          {it.qty} × {money(it.unit_price)}
                       </div>
+                      <div className="text-sm font-black text-slate-900">฿{money(it.line_total)}</div>
                     </div>
                   </div>
                 </div>
