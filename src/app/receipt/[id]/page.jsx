@@ -364,16 +364,16 @@ export default function Receipt() {
                 <div key={it.id} className="group">
                   <div className="flex justify-between items-start gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-black text-slate-800 leading-tight line-clamp-2">
+                      <div className="text-sm font-black text-slate-900 leading-tight line-clamp-2">
                          {it.product_name}
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
                         <div className="mt-1 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                          {it.variant_name && <div className="text-black">{it.variant_name}</div>}
+                          {it.variant_name && <div className="text-black text-sm">{it.variant_name}</div>}
                           {Object.values(groupModifiersForDisplay(it.modifiers || [])).map((group) => (
                             <div key={group.key} className="flex flex-wrap gap-1">
                               {group.title && (
-                                <span className="text-indigo-500">{group.title}</span>
+                                <span className="text-slate-900 text-sm">{group.title}</span>
                               )}
                               {group.items.map(({ key, label }) => (
                                 <span key={key} className="before:content-['·'] before:mr-1 truncate max-w-[120px]">
