@@ -368,7 +368,7 @@ export default function Receipt() {
                         <div className="text-sm font-black text-slate-900 leading-tight line-clamp-2">
                            {it.product_name}
                         </div>
-                        <div className="text-[9px] font-bold text-slate-900 uppercase tracking-tighter">
+                        <div className="text-sm font-bold text-slate-900 uppercase tracking-tighter">
                            {it.qty} × {money(it.unit_price)}฿
                         </div>
                       </div>
