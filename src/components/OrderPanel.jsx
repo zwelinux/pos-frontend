@@ -507,14 +507,14 @@ export default function OrderPanel({ onClose }) {
       </div>
 
       {/* Totals & Footer */}
-      <div className="mt-auto p-8 pt-4 space-y-4">
+      <div className="mt-auto p-5 pt-3 space-y-3">
         {panelError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700">
             {panelError}
           </div>
         ) : null}
 
-        <div className="space-y-2 border-t border-white/20 pt-6">
+        <div className="space-y-1.5 border-t border-white/20 pt-4">
           {compTotal > 0 && (
             <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-emerald-600">
               <span>Applied Discounts</span>
@@ -523,19 +523,19 @@ export default function OrderPanel({ onClose }) {
           )}
           <div className="flex justify-between items-end">
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Amount</span>
-            <span className="text-4xl font-black text-slate-900 tracking-tighter">
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">
               {money(total)} ฿
             </span>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* <PrimaryBtn
             className="w-full rounded-2xl py-4 text-sm tracking-[0.18em] shadow-xl bg-indigo-600 text-white shadow-indigo-200"
             onClick={() => (window.location.href = `/receipt/${order.id}`)}
           > */}
           <PrimaryBtn
-            className="w-full rounded-2xl py-4 text-sm bg-indigo-600 text-white"
+            className="w-full rounded-2xl py-3 text-[11px] bg-indigo-600 text-white"
             onClick={() => (window.location.href = `/receipt/${order.id}`)}
           >
             Print Receipt
@@ -543,7 +543,7 @@ export default function OrderPanel({ onClose }) {
 
           {canSwitchTable ? (
             <GhostBtn
-              className="w-full rounded-2xl py-4 text-sm justify-center"
+              className="w-full rounded-2xl py-3 text-[11px] justify-center"
               disabled={busyOrder}
               onClick={() => {
                 setPanelError("");
@@ -558,7 +558,7 @@ export default function OrderPanel({ onClose }) {
           <MenuPopup
             label="Order FOC"
             wrapperClassName="w-full"
-            buttonClassName="w-full rounded-2xl py-4 text-sm justify-center bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 shadow-sm"
+            buttonClassName="w-full rounded-2xl py-3 text-[11px] justify-center bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 shadow-sm"
             actions={[
               { label: "100% Order FOC", onClick: () => compOrderPercent(100) },
               {
@@ -573,7 +573,7 @@ export default function OrderPanel({ onClose }) {
 
           {canFreeEmptyTable ? (
               <SuccessBtn
-                className="w-full rounded-2xl py-4 text-sm justify-center"
+                className="w-full rounded-2xl py-3 text-[11px] justify-center"
                 disabled={busyOrder}
                 onClick={freeEmptyTable}
               >
