@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useOrder } from "@/store/order";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import AttachTableModal from "@/components/AttachTableModal";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
 import { formatMoney } from "@/lib/money";
 
@@ -106,12 +107,13 @@ export default function OrderPanel({ onClose }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const wantsPanel = searchParams.get("showOrder") === "1";
-  const { order, hasHydrated, ensureFresh, recoverOrder, clearOrder, setLastTableId } = useOrder();
+  const { order, hasHydrated, ensureFresh, recoverOrder, clearOrder, setLastTableId, setOrder } = useOrder();
 
   const [busyOrder, setBusyOrder] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [comps, setComps] = useState([]);
   const [panelError, setPanelError] = useState("");
+  const [showTableModal, setShowTableModal] = useState(false);
 
   async function fetchComps() {
     if (!order?.id) return;
@@ -323,6 +325,7 @@ export default function OrderPanel({ onClose }) {
   const hasActiveComps = (comps || []).some((c) => !c.voided_at);
   const selectedItem = order.items?.find((i) => i.id === selectedItemId);
   const canFreeEmptyTable = !!(order?.table?.id || order?.table_id) && !order?.items?.length && total <= 0 && !hasActiveComps;
+  const canSwitchTable = !order?.paid_at && order?.status !== "void";
 
   return (
     <aside className="flex h-full flex-col glass rounded-[2.5rem] border-white/20 shadow-2xl overflow-hidden relative">
@@ -538,6 +541,19 @@ export default function OrderPanel({ onClose }) {
             Print Receipt
           </PrimaryBtn>
 
+          {canSwitchTable ? (
+            <GhostBtn
+              className="w-full rounded-2xl py-4 text-sm justify-center"
+              disabled={busyOrder}
+              onClick={() => {
+                setPanelError("");
+                setShowTableModal(true);
+              }}
+            >
+              Switch Table
+            </GhostBtn>
+          ) : null}
+
           <div className={`grid gap-3 ${canFreeEmptyTable ? "grid-cols-2" : "grid-cols-1"}`}>
           <MenuPopup
             label="Order FOC"
@@ -573,6 +589,22 @@ export default function OrderPanel({ onClose }) {
            <div className="h-2 w-12 glass rounded-full animate-pulse bg-indigo-500/20" />
         </div>
       )}
+
+      {showTableModal ? (
+        <AttachTableModal
+          order={order}
+          defaultTableId={order?.table?.id || null}
+          title="Switch Table"
+          confirmLabel="Move here"
+          onDone={(updatedOrder) => {
+            setOrder(updatedOrder);
+            setLastTableId(updatedOrder?.table?.id ?? null);
+            setPanelError("");
+            setShowTableModal(false);
+          }}
+          onCancel={() => setShowTableModal(false)}
+        />
+      ) : null}
     </aside>
   );
 }

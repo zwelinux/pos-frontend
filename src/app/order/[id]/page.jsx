@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
+import AttachTableModal from "@/components/AttachTableModal";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
 import { useOrder } from "@/store/order";
 import { formatMoney } from "@/lib/money";
@@ -15,6 +16,7 @@ export default function OrderPage() {
   const { order, setOrder } = useOrder();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [tableModalOpen, setTableModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -94,6 +96,15 @@ export default function OrderPage() {
           Total: {formatMoney(order.total)}
         </div>
         <div className="ml-auto flex gap-2">
+          {!order.paid_at && order.status !== "void" && (
+            <button
+              type="button"
+              onClick={() => setTableModalOpen(true)}
+              className="px-3 py-2 rounded bg-slate-100 border"
+            >
+              Switch table
+            </button>
+          )}
           {!order.table && (
             <Link
               href={`/tables?next=${encodeURIComponent(`/order/${order.id}`)}`}
@@ -112,6 +123,20 @@ export default function OrderPage() {
           )}
         </div>
       </div>
+
+      {tableModalOpen ? (
+        <AttachTableModal
+          order={order}
+          defaultTableId={order?.table?.id || null}
+          title="Switch Table"
+          confirmLabel="Move here"
+          onDone={(updatedOrder) => {
+            setOrder(updatedOrder);
+            setTableModalOpen(false);
+          }}
+          onCancel={() => setTableModalOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

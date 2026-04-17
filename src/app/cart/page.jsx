@@ -319,6 +319,8 @@ export default function CartPage() {
         <AttachTableModal
           order={order}
           defaultTableId={order?.table?.id || null}
+          title="Attach Table"
+          confirmLabel="Attach here"
           onDone={onAttached}
           onCancel={() => {
             setNeedsAttach(false);
