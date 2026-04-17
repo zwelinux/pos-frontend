@@ -66,6 +66,7 @@ function groupTicketsIntoOrders(tickets) {
     if (!groups.has(key)) {
       groups.set(key, {
         key,
+        orderId: ticket.order_id,
         tableName,
         orderNumber,
         createdAt: ticket.created_at,
@@ -74,6 +75,9 @@ function groupTicketsIntoOrders(tickets) {
     }
 
     const group = groups.get(key);
+    if (!group.orderId && ticket.order_id) {
+      group.orderId = ticket.order_id;
+    }
     group.tickets.push(ticket);
     if (ticket.created_at && new Date(ticket.created_at) < new Date(group.createdAt)) {
       group.createdAt = ticket.created_at;
@@ -348,6 +352,17 @@ export default function KDSByTablePage() {
                     >
                       {isDone ? "Completed" : "Mark As Done"}
                     </button>
+
+                    {group.orderId ? (
+                      <Link
+                        href={`/receipt/${group.orderId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-flex w-full items-center justify-center rounded-[1.6rem] border border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-100 hover:text-indigo-600"
+                      >
+                        Print Receipt
+                      </Link>
+                    ) : null}
                   </div>
                 </article>
               );
