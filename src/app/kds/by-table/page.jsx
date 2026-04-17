@@ -284,10 +284,10 @@ export default function KDSByTablePage() {
                   key={group.key}
                   className="overflow-hidden rounded-[2.3rem] glass border-white/30 shadow-xl shadow-slate-200/60"
                 >
-                  <div className={`flex items-center justify-between px-5 py-4 ${isDone ? "bg-indigo-600" : "bg-indigo-700"}`}>
+                  <div className={`flex items-center justify-between px-5 py-4 ${isDone ? "bg-indigo-50" : "bg-indigo-300"}`}>
                     <div>
-                      <div className="text-2xl font-black tracking-tight text-slate-900">{group.tableName}</div>
-                      <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                      <div className="text-2xl font-black tracking-tight text-white">{group.tableName}</div>
+                      <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-white">
                         Order {group.orderNumber}
                       </div>
                     </div>
