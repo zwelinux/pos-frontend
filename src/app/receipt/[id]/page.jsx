@@ -368,7 +368,7 @@ export default function Receipt() {
                          {it.product_name}
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
-                        <div className="mt-1 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="mt-3 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                           {it.variant_name && <div className="text-black text-sm">{it.variant_name}</div>}
                           {Object.values(groupModifiersForDisplay(it.modifiers || [])).map((group) => (
                             <div key={group.key} className="flex flex-wrap gap-1">
@@ -419,7 +419,7 @@ export default function Receipt() {
                </div>
                
                {/* Print Thank You (Only in Print) */}
-               <div className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mt-10 print-only">
+               <div className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 mt-10 print-only">
                   {isPaid ? "Thank You!" : "Payment Pending"}
                </div>
             </section>
