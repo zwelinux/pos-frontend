@@ -364,8 +364,13 @@ export default function Receipt() {
                 <div key={it.id} className="group">
                   <div className="flex justify-between items-start gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-black text-slate-900 leading-tight line-clamp-2">
-                         {it.product_name}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <div className="text-sm font-black text-slate-900 leading-tight line-clamp-2">
+                           {it.product_name}
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-900 uppercase tracking-tighter">
+                           {it.qty} × {money(it.unit_price)}฿
+                        </div>
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
                         <div className="mt-3 space-y-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
@@ -386,11 +391,7 @@ export default function Receipt() {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      
-                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                         {it.qty} × {money(it.unit_price)}
-                      </div>
-                      <div className="text-sm font-black text-slate-900">฿{money(it.line_total)}</div>
+                      <div className="text-sm font-black text-slate-900">{money(it.line_total)}฿</div>
                     </div>
                   </div>
                 </div>
