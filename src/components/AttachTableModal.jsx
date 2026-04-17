@@ -13,6 +13,7 @@ export default function AttachTableModal({
   defaultTableId = null,
   title = "Switch Table",
   confirmLabel = "Move here",
+  contained = false,
   onDone,
   onCancel,
 }) {
@@ -76,8 +77,18 @@ export default function AttachTableModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[2rem] border border-white/20 bg-white/95 p-6 shadow-2xl">
+    <div
+      className={`grid place-items-center p-4 backdrop-blur-sm ${
+        contained
+          ? "absolute inset-0 z-[140] bg-white/55"
+          : "fixed inset-0 z-[100] bg-slate-900/50"
+      }`}
+    >
+      <div
+        className={`w-full rounded-[2rem] border border-white/20 bg-white/95 p-6 shadow-2xl ${
+          contained ? "max-w-none" : "max-w-2xl"
+        }`}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Floor Control</div>
@@ -101,7 +112,7 @@ export default function AttachTableModal({
           </div>
         ) : null}
 
-        <div className="mt-6 grid max-h-[55vh] grid-cols-2 gap-3 overflow-auto pr-1 sm:grid-cols-3">
+        <div className={`mt-6 grid gap-3 overflow-auto pr-1 ${contained ? "max-h-[50vh] grid-cols-2" : "max-h-[55vh] grid-cols-2 sm:grid-cols-3"}`}>
           {tableChoices.map((t) => {
             const isCurrent = t.id === currentTableId;
             const isOccupied = t.status === "occupied" && !isCurrent;

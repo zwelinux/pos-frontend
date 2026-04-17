@@ -596,6 +596,7 @@ export default function OrderPanel({ onClose }) {
           defaultTableId={order?.table?.id || null}
           title="Switch Table"
           confirmLabel="Move here"
+          contained
           onDone={(updatedOrder) => {
             setOrder(updatedOrder);
             setLastTableId(updatedOrder?.table?.id ?? null);
