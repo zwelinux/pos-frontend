@@ -103,7 +103,7 @@ export default function Receipt() {
 
   function openCashModal() {
     if (!order || settling || order.status === "void") return;
-    setCashReceived(String(Number(order.total || 0)));
+    setCashReceived("");
     setCashModalOpen(true);
   }
 
