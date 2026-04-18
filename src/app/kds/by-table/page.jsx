@@ -9,18 +9,25 @@ function todayInBangkok() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
 }
 
-function wsUrlFromApi(apiBase) {
+function cleanStationSlug(value) {
+  return String(value || "MAIN").trim().toUpperCase().replace(/[^0-9A-Z._-]/g, "_").slice(0, 80);
+}
+
+function buildWsCandidates(apiBase, path) {
+  const candidates = [];
+
+  if (typeof window !== "undefined") {
+    const currentProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    candidates.push(`${currentProto}//${window.location.host}${path}`);
+  }
+
   try {
     const u = new URL(apiBase);
     const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
-    return (path) => `${wsProto}//${u.host}${path}`;
-  } catch {
-    return (path) =>
-      (window.location.protocol === "https:" ? "wss:" : "ws:") +
-      "//" +
-      window.location.host +
-      path;
-  }
+    candidates.push(`${wsProto}//${u.host}${path}`);
+  } catch {}
+
+  return [...new Set(candidates)];
 }
 
 function toDateOnly(value) {
@@ -176,7 +183,6 @@ export default function KDSByTablePage() {
   const audioCtxRef = useRef(null);
   const alertTimerRef = useRef(null);
   const liveWsEnabledRef = useRef(false);
-  const makeWsUrl = useMemo(() => wsUrlFromApi(API), []);
   const today = todayInBangkok();
 
   useEffect(() => {
@@ -304,7 +310,10 @@ export default function KDSByTablePage() {
       const res = await authFetch(`${API}/kitchen-stations/`);
       const json = await res.json();
       const unique = new Map();
-      [{ slug: "ALL", name: "ALL" }, ...(json.stations || [])].forEach((station) => unique.set(station.slug, station));
+      [{ slug: "ALL", name: "ALL" }, ...(json.stations || [])].forEach((station) => {
+        const slug = station?.slug ? cleanStationSlug(station.slug) : "ALL";
+        unique.set(slug, { ...station, slug });
+      });
       setStations([...unique.values()]);
     })();
   }, []);
@@ -341,19 +350,28 @@ export default function KDSByTablePage() {
 
     const wantedStations = stations.filter((station) => station.slug !== "ALL");
 
-    const connectStation = (slug) => {
-      const existing = socketsRef.current[slug];
+    const connectStation = (slug, candidateIndex = 0) => {
+      const normalizedSlug = cleanStationSlug(slug);
+      const existing = socketsRef.current[normalizedSlug];
       if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
         return;
       }
 
-      const ws = new WebSocket(makeWsUrl(`/ws/kitchen/${encodeURIComponent(slug)}/`));
-      socketsRef.current[slug] = ws;
+      const candidates = buildWsCandidates(API, `/ws/kitchen/${encodeURIComponent(normalizedSlug)}/`);
+      const targetUrl = candidates[candidateIndex];
+      if (!targetUrl) {
+        setLastEventLabel(`No socket target: ${normalizedSlug}`);
+        setLastEventAt(new Date());
+        return;
+      }
+
+      const ws = new WebSocket(targetUrl);
+      socketsRef.current[normalizedSlug] = ws;
       setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
 
       ws.onopen = () => {
         setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
-        setLastEventLabel(`Socket connected: ${slug}`);
+        setLastEventLabel(`Socket connected: ${normalizedSlug}`);
         setLastEventAt(new Date());
       };
 
@@ -397,21 +415,31 @@ export default function KDSByTablePage() {
       };
 
       ws.onclose = () => {
-        delete socketsRef.current[slug];
+        delete socketsRef.current[normalizedSlug];
         setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
-        setLastEventLabel(`Socket closed: ${slug}`);
+        if (!ws.wasOpened && candidateIndex + 1 < candidates.length) {
+          setLastEventLabel(`Retrying socket: ${normalizedSlug}`);
+          setLastEventAt(new Date());
+          connectStation(normalizedSlug, candidateIndex + 1);
+          return;
+        }
+        setLastEventLabel(`Socket closed: ${normalizedSlug}`);
         setLastEventAt(new Date());
         if (!liveWsEnabledRef.current) return;
-        reconnectTimersRef.current[slug] = window.setTimeout(() => connectStation(slug), 1500);
+        reconnectTimersRef.current[normalizedSlug] = window.setTimeout(() => connectStation(normalizedSlug), 1500);
       };
 
       ws.onerror = () => {
-        setLastEventLabel(`Socket error: ${slug}`);
+        setLastEventLabel(`Socket error: ${normalizedSlug}`);
         setLastEventAt(new Date());
         try {
           ws.close();
         } catch {}
       };
+
+      ws.addEventListener("open", () => {
+        ws.wasOpened = true;
+      });
     };
 
     wantedStations.forEach((station) => connectStation(station.slug));
@@ -440,7 +468,7 @@ export default function KDSByTablePage() {
       socketsRef.current = {};
       setWsConnectedCount(0);
     };
-  }, [stations, selectedDate, today, makeWsUrl]);
+  }, [stations, selectedDate, today]);
 
   const filteredTickets = useMemo(
     () =>
