@@ -47,6 +47,7 @@ export default function Receipt() {
   const [settling, setSettling] = useState(false);
   const [voiding, setVoiding] = useState(false);
   const [tabBusy, setTabBusy] = useState(false);
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const [cashModalOpen, setCashModalOpen] = useState(false);
   const [cashReceived, setCashReceived] = useState("");
 
@@ -161,6 +162,41 @@ export default function Receipt() {
     } finally {
       setTabBusy(false);
     }
+  }
+
+  async function changePaymentMethod(nextMethod) {
+    if (!order || !order.paid_at || order.status === "void" || paymentBusy) return;
+
+    const normalized = String(nextMethod || "").trim().toLowerCase();
+    if (!normalized || normalized === order.payment_method) return;
+
+    setPaymentBusy(true);
+    try {
+      const r = await authFetch(`${API}/orders/${order.id}/change-payment-method/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payment_method: normalized }),
+      });
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}));
+        throw new Error(data.detail || "Unable to change payment method.");
+      }
+      const updated = await r.json();
+      setOrder(updated);
+    } catch (e) {
+      alert(e.message || "Unable to change payment method.");
+    } finally {
+      setPaymentBusy(false);
+    }
+  }
+
+  function promptChangePaymentMethod() {
+    if (!order?.paid_at || order?.status === "void") return;
+    const current = String(order.payment_method || "").toLowerCase();
+    const options = ["cash", "card", "qr", "transfer", "other"].filter((value) => value !== current);
+    const picked = prompt(`Change payment method from "${current}" to:\n${options.join(" / ")}`, options[0] || "");
+    if (!picked) return;
+    changePaymentMethod(picked);
   }
 
   function backToTable() {
@@ -448,6 +484,17 @@ export default function Receipt() {
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h11" /></svg>
             Back To Table
           </button>
+
+          {isPaid && !isVoided && (
+            <button
+              onClick={promptChangePaymentMethod}
+              disabled={paymentBusy}
+              className="w-full h-16 flex items-center justify-center gap-3 rounded-[2.2rem] border border-amber-200 bg-amber-50 text-amber-700 font-black uppercase tracking-[0.2em] text-sm hover:bg-amber-100 transition-all hover:-translate-y-1 active:translate-y-0 shadow-xl shadow-amber-100/40 disabled:opacity-50"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v10m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              {paymentBusy ? "Changing..." : `Change Payment (${String(order.payment_method || "unknown").toUpperCase()})`}
+            </button>
+          )}
 
           {!isPaid && !isVoided && (
             <>
