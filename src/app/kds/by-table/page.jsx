@@ -1,12 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 
 function todayInBangkok() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+}
+
+function wsUrlFromApi(apiBase) {
+  try {
+    const u = new URL(apiBase);
+    const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
+    return (path) => `${wsProto}//${u.host}${path}`;
+  } catch {
+    return (path) =>
+      (window.location.protocol === "https:" ? "wss:" : "ws:") +
+      "//" +
+      window.location.host +
+      path;
+  }
 }
 
 function toDateOnly(value) {
@@ -151,6 +165,81 @@ export default function KDSByTablePage() {
   const [selectedDate, setSelectedDate] = useState(todayInBangkok());
   const [loading, setLoading] = useState(true);
   const [busyIds, setBusyIds] = useState([]);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
+  const socketsRef = useRef({});
+  const reconnectTimersRef = useRef({});
+  const audioRef = useRef(null);
+  const liveWsEnabledRef = useRef(false);
+  const makeWsUrl = useMemo(() => wsUrlFromApi(API), []);
+  const today = todayInBangkok();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const audio = new Audio("/sounds/neworder.mp3");
+    audio.preload = "auto";
+    audioRef.current = audio;
+
+    return () => {
+      try {
+        audio.pause();
+      } catch {}
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const unlockAudio = async () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      try {
+        const prevMuted = audio.muted;
+        const prevVolume = audio.volume;
+        audio.muted = true;
+        audio.volume = 0;
+        audio.currentTime = 0;
+        await audio.play();
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = prevMuted;
+        audio.volume = prevVolume || 1;
+        setAudioEnabled(true);
+      } catch {
+        setAudioEnabled(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", unlockAudio, { passive: true });
+    window.addEventListener("keydown", unlockAudio);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
+
+  async function playNewOrderAlert() {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      audio.currentTime = 0;
+      await audio.play();
+      setAudioEnabled(true);
+    } catch {
+      setAudioEnabled(false);
+    }
+  }
+
+  function showBrowserNotification(title, body) {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    try {
+      new Notification(title, { body });
+    } catch {}
+  }
 
   useEffect(() => {
     (async () => {
@@ -183,6 +272,100 @@ export default function KDSByTablePage() {
       clearInterval(timer);
     };
   }, [selectedDate]);
+
+  useEffect(() => {
+    liveWsEnabledRef.current = typeof window !== "undefined" && selectedDate === today;
+    if (!liveWsEnabledRef.current) return;
+
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    const wantedStations = stations.filter((station) => station.slug !== "ALL");
+
+    const connectStation = (slug) => {
+      const existing = socketsRef.current[slug];
+      if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+
+      const ws = new WebSocket(makeWsUrl(`/ws/kitchen/${encodeURIComponent(slug)}/`));
+      socketsRef.current[slug] = ws;
+
+      ws.onmessage = async (event) => {
+        let msg = null;
+        try {
+          msg = JSON.parse(event.data);
+        } catch {
+          return;
+        }
+        if (!msg?.type || !msg?.data) return;
+
+        if (msg.type === "ticket") {
+          setTickets((prev) => (prev.some((ticket) => ticket.id === msg.data.id) ? prev : [msg.data, ...prev]));
+          await playNewOrderAlert();
+          showBrowserNotification(
+            "New Kitchen Order",
+            `${msg.data?.table_name || "Takeaway"} • Order ${msg.data?.order_number || msg.data?.order_id || ""}`
+          );
+          return;
+        }
+
+        if (msg.type === "update") {
+          setTickets((prev) =>
+            prev.map((ticket) => (ticket.id === msg.data.id ? { ...ticket, ...msg.data } : ticket))
+          );
+          return;
+        }
+
+        if (msg.type === "cancel") {
+          setTickets((prev) =>
+            prev.map((ticket) =>
+              ticket.id === msg.data.id
+                ? { ...ticket, isVoided: true, status: "cancelled", updated_at: new Date().toISOString() }
+                : ticket
+            )
+          );
+        }
+      };
+
+      ws.onclose = () => {
+        delete socketsRef.current[slug];
+        if (!liveWsEnabledRef.current) return;
+        reconnectTimersRef.current[slug] = window.setTimeout(() => connectStation(slug), 1500);
+      };
+
+      ws.onerror = () => {
+        try {
+          ws.close();
+        } catch {}
+      };
+    };
+
+    wantedStations.forEach((station) => connectStation(station.slug));
+
+    const wanted = new Set(wantedStations.map((station) => station.slug));
+    Object.entries(socketsRef.current).forEach(([slug, socket]) => {
+      if (wanted.has(slug)) return;
+      try {
+        socket.close(1000, "cleanup");
+      } catch {}
+      delete socketsRef.current[slug];
+    });
+
+    return () => {
+      liveWsEnabledRef.current = false;
+      Object.values(reconnectTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
+      reconnectTimersRef.current = {};
+
+      Object.values(socketsRef.current).forEach((socket) => {
+        try {
+          socket.close(1000, "cleanup");
+        } catch {}
+      });
+      socketsRef.current = {};
+    };
+  }, [stations, selectedDate, today, makeWsUrl]);
 
   const filteredTickets = useMemo(
     () =>
@@ -231,6 +414,10 @@ export default function KDSByTablePage() {
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">KDS By Table</h1>
             <p className="mt-2 text-sm text-slate-500">Grouped by table number and order receipt, using the same KDS visual language.</p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {selectedDate === today ? `Live WS • Sound ${audioEnabled ? "On" : "Tap To Enable"}` : "Archive Mode"}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
