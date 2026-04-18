@@ -333,7 +333,7 @@ export default function OrderPanel({ onClose }) {
       <div className="p-8 pb-4">
         <div className="flex items-center justify-between">
            <div>
-             <div className="text-2xl font-black text-slate-900 tracking-tight">Active Order</div>
+             <div className="text-4xl font-black text-slate-900 tracking-tight">Active Order</div>
              <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                <span className="text-slate-600 font-black">{tableName}</span>
