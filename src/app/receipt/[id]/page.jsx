@@ -427,7 +427,7 @@ export default function Receipt() {
             {/* Footer Totals */}
             <section className="border-t-2 border-dashed border-slate-100 pt-8 mt-4">
                <div className="flex justify-between items-center mb-6">
-                  <div className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Total Payable</div>
+                  <div className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Total</div>
                   <div className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">{money(order.total)} ฿</div>
                </div>
                
