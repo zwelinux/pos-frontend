@@ -382,7 +382,7 @@ export default function OrderPanel({ onClose }) {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-black text-slate-800">
                         {/* {it.product_name} {Number(it.qty)} × {money(it.unit_price)} */}
-                        {it.product_name} x {Number(it.qty)}
+                        {it.product_name}  {Number(it.qty)}
                       </div>
                       {it.variant_name && (
                         <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">

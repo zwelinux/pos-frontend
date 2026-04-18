@@ -369,7 +369,8 @@ export default function Receipt() {
                            {it.product_name}
                         </div>
                         <div className="text-sm font-bold text-slate-900 uppercase tracking-tighter">
-                           {it.qty} × {money(it.unit_price)}฿
+                           {/* {it.qty} × {money(it.unit_price)}฿ */}
+                            {it.qty}
                         </div>
                       </div>
                       {(it.variant_name || it.modifiers?.length > 0) && (
@@ -417,7 +418,7 @@ export default function Receipt() {
             <section className="border-t-2 border-dashed border-slate-100 pt-8 mt-4">
                <div className="flex justify-between items-center mb-6">
                   <div className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Total Payable</div>
-                  <div className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">฿{money(order.total)}</div>
+                  <div className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">{money(order.total)} ฿</div>
                </div>
                
                {/* Print Thank You (Only in Print) */}
