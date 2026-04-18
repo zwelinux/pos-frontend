@@ -339,10 +339,10 @@ export default function Receipt() {
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-16 max-w-6xl w-full justify-center">
+      <div className="flex flex-col md:flex-row items-start gap-8 md:gap-10 lg:gap-16 max-w-6xl w-full justify-center">
         
         {/* Receipt Paper Container */}
-        <div className="receipt-paper max-w-[340px] w-full shrink-0 animate-slide-down">
+        <div className="receipt-paper max-w-[340px] w-full shrink-0 animate-slide-down md:sticky md:top-8">
           {/* Physical Paper Visuals */}
           <div className="relative bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 p-8 pt-10 overflow-hidden">
             
@@ -476,7 +476,7 @@ export default function Receipt() {
         </div>
 
         {/* Action Buttons Side HUD (Screen HUD only) */}
-        <div className="w-full max-w-[420px] flex flex-col gap-6 no-print lg:sticky lg:top-12">
+        <div className="w-full md:w-[360px] lg:w-[420px] max-w-[420px] flex flex-col gap-4 md:gap-5 no-print md:sticky md:top-8">
           <button
             onClick={backToTable}
             className="w-full h-16 flex items-center justify-center gap-3 rounded-[2.2rem] glass border-white/40 text-slate-700 font-black uppercase tracking-[0.2em] text-sm hover:bg-white/80 transition-all hover:-translate-y-1 active:translate-y-0 shadow-xl shadow-slate-100"
