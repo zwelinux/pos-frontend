@@ -330,23 +330,23 @@ export default function OrderPanel({ onClose }) {
   return (
     <aside className="flex h-full flex-col glass rounded-[2.5rem] border-white/20 shadow-2xl overflow-hidden relative">
       {/* Header */}
-      <div className="p-8 pb-4">
+      <div className="p-5 pb-2">
         <div className="flex items-center justify-between">
            <div>
-             <div className="text-4xl font-black text-slate-900 tracking-tight">Active Order</div>
-             <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
-               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+             <div className="text-2xl font-black text-slate-900 tracking-tight">Active Order</div>
+             <div className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-1">
+               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                <span className="text-slate-600 font-black">{tableName}</span>
              </div>
            </div>
            <div className="flex items-center gap-2">
-             <span className="hidden sm:inline-block rounded-xl glass border-white/40 px-3 py-1 text-[10px] font-black text-slate-500 shadow-sm ring-1 ring-slate-900/5">
+             <span className="hidden sm:inline-block rounded-xl glass border-white/40 px-2.5 py-1 text-[9px] font-black text-slate-500 shadow-sm ring-1 ring-slate-900/5">
                ID: #{order.id}
              </span>
              {onClose && (
                <button 
                  onClick={onClose}
-                 className="md:hidden h-10 w-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                 className="md:hidden h-9 w-9 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
                >
                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                </button>
@@ -356,7 +356,7 @@ export default function OrderPanel({ onClose }) {
       </div>
 
       {/* Order Items */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-2">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-2 pb-48">
         {!order.items?.length ? (
           <div className="h-full flex flex-col items-center justify-center opacity-40">
              <div className="text-sm font-bold uppercase tracking-widest text-slate-400">Empty Selection</div>
@@ -374,34 +374,34 @@ export default function OrderPanel({ onClose }) {
                   onClick={() => setSelectedItemId(isSelected ? null : it.id)}
                   className={`relative rounded-2xl border p-4 cursor-pointer transition-all duration-300 ${
                     isSelected
-                      ? "bg-white border-indigo-100 shadow-xl shadow-indigo-50/50 -translate-y-1"
+                      ? "bg-white border-indigo-100 shadow-lg shadow-indigo-50/50 -translate-y-0.5"
                       : "glass border-white/20 hover:border-indigo-100"
                   }`}
                 >
-                  <div className="flex justify-between items-start gap-4">
+                  <div className="flex justify-between items-start gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-black text-slate-800">
+                      <div className="truncate text-[13px] font-black text-slate-800 leading-tight">
                         {/* {it.product_name} {Number(it.qty)} × {money(it.unit_price)} */}
                         {it.product_name}  {Number(it.qty)}
                       </div>
                       {it.variant_name && (
-                        <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">
+                        <div className="mt-0.5 text-[9px] font-bold text-indigo-500 uppercase tracking-[0.16em]">
                           {it.variant_name}
                         </div>
                       )}
                       
                       {!!it.modifiers?.length && (
-                        <div className="mt-2 space-y-1.5">
+                        <div className="mt-1.5 space-y-1">
                           {Object.values(groupModifiersForDisplay(it.modifiers)).map((group) => (
                             <div key={group.key} className="flex flex-col gap-0.5">
                               {group.title && (
-                                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 opacity-80 leading-none">
+                                <span className="text-[8px] font-black uppercase tracking-[0.16em] text-indigo-400 opacity-80 leading-none">
                                   {group.title}
                                 </span>
                               )}
-                              <div className="flex flex-wrap gap-1 mt-0.5">
+                              <div className="mt-0.5 flex flex-wrap gap-1">
                                 {group.items.map(({ key, label }) => (
-                                  <span key={key} className="text-[9.5px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 italic">
+                                  <span key={key} className="rounded-md border border-slate-100 bg-slate-50 px-1.5 py-0.5 text-[8.5px] font-bold italic text-slate-600">
                                     {label}
                                   </span>
                                 ))}
@@ -412,7 +412,7 @@ export default function OrderPanel({ onClose }) {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-xs font-black text-slate-900">
+                      <div className="text-[11px] font-black text-slate-900">
                         {comped > 0 ? (
                           <span className="text-emerald-600">฿{money(net)}</span>
                         ) : (
@@ -435,50 +435,50 @@ export default function OrderPanel({ onClose }) {
       <div className={`transition-all duration-500 absolute inset-x-0 bottom-0 z-[60] transform ${
         selectedItem ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
       }`}>
-        <div className="glass border-t border-white/60 shadow-[0_-20px_60px_rgba(0,0,0,0.15)] p-10 relative overflow-hidden backdrop-blur-3xl rounded-t-[3rem]">
+        <div className="glass border-t border-white/60 shadow-[0_-20px_60px_rgba(0,0,0,0.15)] p-5 relative overflow-hidden backdrop-blur-3xl rounded-t-[2.5rem]">
            {/* Background Accent */}
-           <div className="absolute -top-10 -right-10 h-32 w-32 bg-indigo-500/5 rounded-full blur-3xl" />
+           <div className="absolute -top-8 -right-8 h-24 w-24 bg-indigo-500/5 rounded-full blur-3xl" />
            
-           <div className="flex items-start justify-between mb-8">
+           <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-50 px-2 py-0.5 mb-2 shadow-sm">
+                <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-indigo-500/10 bg-indigo-50 px-2 py-0.5 shadow-sm">
                    <div className="h-1 w-1 rounded-full bg-indigo-500 animate-pulse" />
                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">Adjusting Item</span>
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[240px]">
+                <h3 className="max-w-[220px] truncate text-lg font-black leading-none tracking-tight text-slate-900">
                   {selectedItem?.product_name}
                 </h3>
                 {selectedItem?.variant_name && (
-                   <div className="mt-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedItem?.variant_name}</div>
+                   <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">{selectedItem?.variant_name}</div>
                 )}
               </div>
               <button 
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setSelectedItemId(null); }}
-                className="relative z-10 h-10 w-10 cursor-pointer rounded-2xl glass border-white/40 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50 transition-all duration-300 shadow-sm"
+                className="relative z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-2xl glass border-white/40 text-slate-400 shadow-sm transition-all duration-300 hover:border-rose-100 hover:bg-rose-50 hover:text-rose-600"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
            </div>
            
-           <div className="space-y-8">
+           <div className="space-y-4">
              {/* Quantity Selector Section */}
-             <div className="flex items-center justify-between p-2 glass rounded-[2rem] border-white/40 shadow-inner bg-white/40">
+             <div className="flex items-center justify-between rounded-[1.75rem] border-white/40 bg-white/40 p-2 glass shadow-inner">
                <button
                  disabled={busyOrder}
                  onClick={(e) => { e.stopPropagation(); setQty(selectedItem?.id, Number(selectedItem?.qty) - 1); }}
-                 className="h-16 w-16 flex items-center justify-center rounded-[1.4rem] bg-white shadow-lg font-black text-2xl text-slate-400 hover:text-indigo-600 active:scale-90 active:shadow-inner transition-all hover:translate-y-[-2px]"
+                 className="flex h-12 w-12 items-center justify-center rounded-[1.15rem] bg-white text-xl font-black text-slate-400 shadow-lg transition-all hover:translate-y-[-2px] hover:text-indigo-600 active:scale-90 active:shadow-inner"
                > − </button>
                
                <div className="flex flex-col items-center">
-                 <div className="text-4xl font-black tabular-nums text-indigo-600 tracking-tighter">{selectedItem?.qty}</div>
-                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Units Selected</div>
+                 <div className="text-3xl font-black tabular-nums tracking-tighter text-indigo-600">{selectedItem?.qty}</div>
+                 <div className="mt-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">Units</div>
                </div>
                
                <button
                  disabled={busyOrder}
                  onClick={(e) => { e.stopPropagation(); setQty(selectedItem?.id, Number(selectedItem?.qty) + 1); }}
-                 className="h-16 w-16 flex items-center justify-center rounded-[1.4rem] bg-white shadow-lg font-black text-2xl text-slate-400 hover:text-indigo-600 active:scale-90 active:shadow-inner transition-all hover:translate-y-[-2px]"
+                 className="flex h-12 w-12 items-center justify-center rounded-[1.15rem] bg-white text-xl font-black text-slate-400 shadow-lg transition-all hover:translate-y-[-2px] hover:text-indigo-600 active:scale-90 active:shadow-inner"
                > + </button>
              </div>
 
@@ -507,14 +507,14 @@ export default function OrderPanel({ onClose }) {
       </div>
 
       {/* Totals & Footer */}
-      <div className="mt-auto p-5 pt-3 space-y-3">
+      <div className="mt-auto space-y-3 p-4 pt-2">
         {panelError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700">
             {panelError}
           </div>
         ) : null}
 
-        <div className="space-y-1.5 border-t border-white/20 pt-4">
+        <div className="space-y-1 border-t border-white/20 pt-3">
           {compTotal > 0 && (
             <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-emerald-600">
               <span>Applied Discounts</span>
@@ -522,8 +522,8 @@ export default function OrderPanel({ onClose }) {
             </div>
           )}
           <div className="flex justify-between items-end">
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Amount</span>
-            <span className="text-3xl font-black text-slate-900 tracking-tighter">
+            <span className="mb-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Total Amount</span>
+            <span className="text-2xl font-black tracking-tighter text-slate-900">
               {money(total)} ฿
             </span>
           </div>
