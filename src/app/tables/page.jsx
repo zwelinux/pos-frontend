@@ -87,7 +87,7 @@ export default function TablesPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-12 min-h-[calc(100vh-80px)] mt-[2%]">
+    <main className="max-w-7xl mx-auto px-4 py-4 min-h-[calc(100vh-80px)] mt-[2%]">
       <header className="mb-12 text-center md:text-left">
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-50/50 px-4 py-1.5 mb-6 shadow-sm">
           <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
