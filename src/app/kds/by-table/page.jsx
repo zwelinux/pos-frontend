@@ -597,7 +597,7 @@ export default function KDSByTablePage() {
                                   {item.productName} {item.qty}
                                 </div>
                                 {item.variantName ? (
-                                  <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-500">
+                                  <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-black">
                                     {item.variantName}
                                   </div>
                                 ) : null}
