@@ -594,7 +594,7 @@ export default function KDSByTablePage() {
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="text-[15px] font-black leading-tight text-slate-900">
-                                  {item.qty}x {item.productName}
+                                  {item.productName} {item.qty}
                                 </div>
                                 {item.variantName ? (
                                   <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-500">
