@@ -170,6 +170,8 @@ export default function KDSByTablePage() {
   const socketsRef = useRef({});
   const reconnectTimersRef = useRef({});
   const audioRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const alertTimerRef = useRef(null);
   const liveWsEnabledRef = useRef(false);
   const makeWsUrl = useMemo(() => wsUrlFromApi(API), []);
   const today = todayInBangkok();
@@ -188,48 +190,95 @@ export default function KDSByTablePage() {
     };
   }, []);
 
-  useEffect(() => {
-    const unlockAudio = async () => {
-      const audio = audioRef.current;
-      if (!audio) return;
+  async function unlockAudio() {
+    const audio = audioRef.current;
+    if (!audio || typeof window === "undefined") return false;
 
-      try {
-        const prevMuted = audio.muted;
-        const prevVolume = audio.volume;
-        audio.muted = true;
-        audio.volume = 0;
-        audio.currentTime = 0;
-        await audio.play();
-        audio.pause();
-        audio.currentTime = 0;
-        audio.muted = prevMuted;
-        audio.volume = prevVolume || 1;
-        setAudioEnabled(true);
-      } catch {
-        setAudioEnabled(false);
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
+      if (audioCtxRef.current.state === "suspended") {
+        await audioCtxRef.current.resume();
+      }
+
+      audio.currentTime = 0;
+      const prevMuted = audio.muted;
+      const prevVolume = audio.volume;
+      audio.muted = true;
+      audio.volume = 0;
+      await audio.play();
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = prevMuted;
+      audio.volume = prevVolume || 1;
+      setAudioEnabled(true);
+      return true;
+    } catch {
+      setAudioEnabled(false);
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    const onUserGesture = () => {
+      unlockAudio();
     };
 
-    window.addEventListener("pointerdown", unlockAudio, { passive: true });
-    window.addEventListener("keydown", unlockAudio);
+    window.addEventListener("pointerdown", onUserGesture, { passive: true });
+    window.addEventListener("keydown", onUserGesture);
 
     return () => {
-      window.removeEventListener("pointerdown", unlockAudio);
-      window.removeEventListener("keydown", unlockAudio);
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
     };
   }, []);
 
+  function playBeep(freq = 880, duration = 0.18) {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.22, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }
+
   async function playNewOrderAlert() {
+    clearTimeout(alertTimerRef.current);
+
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      playBeep();
+      return;
+    }
 
     try {
       audio.currentTime = 0;
       await audio.play();
       setAudioEnabled(true);
     } catch {
+      playBeep();
       setAudioEnabled(false);
     }
+
+    alertTimerRef.current = window.setTimeout(() => {
+      const replay = async () => {
+        try {
+          audio.currentTime = 0;
+          await audio.play();
+        } catch {
+          playBeep(880, 0.15);
+        }
+      };
+      replay();
+    }, 900);
   }
 
   function showBrowserNotification(title, body) {
@@ -354,6 +403,7 @@ export default function KDSByTablePage() {
     });
 
     return () => {
+      clearTimeout(alertTimerRef.current);
       liveWsEnabledRef.current = false;
       Object.values(reconnectTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
       reconnectTimersRef.current = {};
@@ -421,6 +471,17 @@ export default function KDSByTablePage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={unlockAudio}
+              className={`inline-flex h-11 items-center justify-center rounded-2xl border px-4 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                audioEnabled
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+              }`}
+            >
+              {audioEnabled ? "Sound Ready" : "Enable Sound"}
+            </button>
             <Link
               href="/kds/all"
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/50 bg-white/70 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 transition hover:text-indigo-600"
