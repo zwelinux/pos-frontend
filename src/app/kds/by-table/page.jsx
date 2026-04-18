@@ -166,6 +166,9 @@ export default function KDSByTablePage() {
   const [loading, setLoading] = useState(true);
   const [busyIds, setBusyIds] = useState([]);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [wsConnectedCount, setWsConnectedCount] = useState(0);
+  const [lastEventLabel, setLastEventLabel] = useState("No events yet");
+  const [lastEventAt, setLastEventAt] = useState(null);
 
   const socketsRef = useRef({});
   const reconnectTimersRef = useRef({});
@@ -281,6 +284,12 @@ export default function KDSByTablePage() {
     }, 900);
   }
 
+  async function testSound() {
+    const unlocked = await unlockAudio();
+    if (!unlocked && !audioCtxRef.current) return;
+    await playNewOrderAlert();
+  }
+
   function showBrowserNotification(title, body) {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
@@ -340,6 +349,13 @@ export default function KDSByTablePage() {
 
       const ws = new WebSocket(makeWsUrl(`/ws/kitchen/${encodeURIComponent(slug)}/`));
       socketsRef.current[slug] = ws;
+      setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
+
+      ws.onopen = () => {
+        setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
+        setLastEventLabel(`Socket connected: ${slug}`);
+        setLastEventAt(new Date());
+      };
 
       ws.onmessage = async (event) => {
         let msg = null;
@@ -349,6 +365,8 @@ export default function KDSByTablePage() {
           return;
         }
         if (!msg?.type || !msg?.data) return;
+        setLastEventLabel(`${String(msg.type).toUpperCase()} • ${msg.data?.table_name || "Takeaway"} • ${msg.data?.product_name || `Order ${msg.data?.order_number || msg.data?.order_id || ""}`}`);
+        setLastEventAt(new Date());
 
         if (msg.type === "ticket") {
           setTickets((prev) => (prev.some((ticket) => ticket.id === msg.data.id) ? prev : [msg.data, ...prev]));
@@ -380,11 +398,16 @@ export default function KDSByTablePage() {
 
       ws.onclose = () => {
         delete socketsRef.current[slug];
+        setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
+        setLastEventLabel(`Socket closed: ${slug}`);
+        setLastEventAt(new Date());
         if (!liveWsEnabledRef.current) return;
         reconnectTimersRef.current[slug] = window.setTimeout(() => connectStation(slug), 1500);
       };
 
       ws.onerror = () => {
+        setLastEventLabel(`Socket error: ${slug}`);
+        setLastEventAt(new Date());
         try {
           ws.close();
         } catch {}
@@ -401,6 +424,7 @@ export default function KDSByTablePage() {
       } catch {}
       delete socketsRef.current[slug];
     });
+    setWsConnectedCount(Object.values(socketsRef.current).filter((socket) => socket.readyState === WebSocket.OPEN).length);
 
     return () => {
       clearTimeout(alertTimerRef.current);
@@ -414,6 +438,7 @@ export default function KDSByTablePage() {
         } catch {}
       });
       socketsRef.current = {};
+      setWsConnectedCount(0);
     };
   }, [stations, selectedDate, today, makeWsUrl]);
 
@@ -482,6 +507,13 @@ export default function KDSByTablePage() {
             >
               {audioEnabled ? "Sound Ready" : "Enable Sound"}
             </button>
+            <button
+              type="button"
+              onClick={testSound}
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-50 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-indigo-700 transition hover:bg-indigo-100"
+            >
+              Test Sound
+            </button>
             <Link
               href="/kds/all"
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/50 bg-white/70 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 transition hover:text-indigo-600"
@@ -505,6 +537,28 @@ export default function KDSByTablePage() {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="h-11 rounded-2xl glass border-white/40 px-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
             />
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-3 rounded-[2rem] glass border-white/20 p-4 md:grid-cols-3">
+          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Socket Status</div>
+            <div className="mt-2 text-sm font-black text-slate-900">
+              {selectedDate === today ? `${wsConnectedCount} connected` : "Archive mode"}
+            </div>
+          </div>
+          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Audio Status</div>
+            <div className="mt-2 text-sm font-black text-slate-900">
+              {audioEnabled ? "Ready" : "Locked or blocked"}
+            </div>
+          </div>
+          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Last Event</div>
+            <div className="mt-2 text-sm font-black text-slate-900">{lastEventLabel}</div>
+            <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+              {lastEventAt ? lastEventAt.toLocaleTimeString() : "Waiting"}
+            </div>
           </div>
         </div>
 
