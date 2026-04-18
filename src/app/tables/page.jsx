@@ -1,12 +1,14 @@
 // src/app/tables/page.jsx
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { useOrder } from "@/store/order";
 import Link from "next/link";
 // import Navbar from "@/components/Navbar";
+
+const LIVE_SYNC_MS = 3000;
 
 export default function TablesPage() {
   const router = useRouter();
@@ -20,19 +22,50 @@ export default function TablesPage() {
 
   const [tables, setTables] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
+  const inFlightRef = useRef(false);
 
-  async function loadTables() {
+  async function loadTables({ silent = false } = {}) {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
-      const r = await authFetch(`${API}/tables/`);
+      const r = await authFetch(`${API}/tables/`, { cache: "no-store" });
       if (!r.ok) throw new Error();
-      setTables(await r.json());
+      const data = await r.json();
+      setTables(Array.isArray(data) ? data : []);
+      setLastUpdatedAt(new Date());
     } catch {
-      setTables([]);
+      if (!silent) {
+        setTables([]);
+      }
+    } finally {
+      inFlightRef.current = false;
     }
   }
 
   useEffect(() => {
     loadTables();
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      loadTables({ silent: true });
+    }, LIVE_SYNC_MS);
+
+    const refreshNow = () => {
+      if (document.visibilityState === "visible") {
+        loadTables({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", refreshNow);
+    document.addEventListener("visibilitychange", refreshNow);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshNow);
+      document.removeEventListener("visibilitychange", refreshNow);
+    };
   }, []);
 
   async function pickTable(table) {
@@ -66,6 +99,15 @@ export default function TablesPage() {
         <p className="mt-4 text-slate-500 font-medium text-lg">
           Choose an active table to manage orders or start a new session.
         </p>
+        <div className="mt-5 flex flex-col gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 md:flex-row md:items-center">
+          <div className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-emerald-700 md:justify-start">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Live sync every {Math.floor(LIVE_SYNC_MS / 1000)}s
+          </div>
+          <div>
+            Last update: {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString() : "Syncing..."}
+          </div>
+        </div>
       </header>
        
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6">
