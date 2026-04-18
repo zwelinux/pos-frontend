@@ -510,38 +510,8 @@ export default function KDSByTablePage() {
     <main className="mesh-bg min-h-[calc(100vh-80px)] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-6 flex flex-col gap-4 rounded-[2.5rem] glass border-white/20 p-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-50/50 px-3 py-1 shadow-sm">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-indigo-600">Kitchen Orders</span>
-            </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">KDS By Table</h1>
-            <p className="mt-2 text-sm text-slate-500">Grouped by table number and order receipt, using the same KDS visual language.</p>
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {selectedDate === today ? `Live WS • Sound ${audioEnabled ? "On" : "Tap To Enable"}` : "Archive Mode"}
-            </div>
-          </div>
-
+        
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={unlockAudio}
-              className={`inline-flex h-11 items-center justify-center rounded-2xl border px-4 text-[11px] font-black uppercase tracking-[0.18em] transition ${
-                audioEnabled
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-              }`}
-            >
-              {audioEnabled ? "Sound Ready" : "Enable Sound"}
-            </button>
-            <button
-              type="button"
-              onClick={testSound}
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-50 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-indigo-700 transition hover:bg-indigo-100"
-            >
-              Test Sound
-            </button>
             <Link
               href="/kds/all"
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/50 bg-white/70 px-4 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 transition hover:text-indigo-600"
@@ -565,28 +535,6 @@ export default function KDSByTablePage() {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="h-11 rounded-2xl glass border-white/40 px-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
             />
-          </div>
-        </div>
-
-        <div className="mb-6 grid gap-3 rounded-[2rem] glass border-white/20 p-4 md:grid-cols-3">
-          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Socket Status</div>
-            <div className="mt-2 text-sm font-black text-slate-900">
-              {selectedDate === today ? `${wsConnectedCount} connected` : "Archive mode"}
-            </div>
-          </div>
-          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Audio Status</div>
-            <div className="mt-2 text-sm font-black text-slate-900">
-              {audioEnabled ? "Ready" : "Locked or blocked"}
-            </div>
-          </div>
-          <div className="rounded-[1.4rem] border border-white/40 bg-white/70 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Last Event</div>
-            <div className="mt-2 text-sm font-black text-slate-900">{lastEventLabel}</div>
-            <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-              {lastEventAt ? lastEventAt.toLocaleTimeString() : "Waiting"}
-            </div>
           </div>
         </div>
 
