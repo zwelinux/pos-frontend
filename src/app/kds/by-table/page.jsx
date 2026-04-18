@@ -143,11 +143,24 @@ function groupTicketsIntoOrders(tickets) {
         .filter((ticket) => ticket.status !== "done" && ticket.status !== "cancelled" && !ticket.isVoided)
         .map((ticket) => ticket.id);
 
+      const completedAt =
+        activeTicketIds.length === 0
+          ? group.tickets
+              .filter((ticket) => !ticket.isVoided && ticket.status !== "cancelled")
+              .reduce((latest, ticket) => {
+                const candidate = ticket.done_at || ticket.updated_at || ticket.created_at || null;
+                if (!candidate) return latest;
+                if (!latest) return candidate;
+                return new Date(candidate) > new Date(latest) ? candidate : latest;
+              }, null)
+          : null;
+
       return {
         ...group,
         items,
         activeTicketIds,
         activeCount: activeTicketIds.length,
+        completedAt,
       };
     })
     .filter((group) => group.items.length > 0)
@@ -158,8 +171,10 @@ function groupTicketsIntoOrders(tickets) {
     });
 }
 
-function prettyAge(value) {
-  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+function prettyAge(startValue, endValue = null) {
+  const start = new Date(startValue).getTime();
+  const end = endValue ? new Date(endValue).getTime() : Date.now();
+  const seconds = Math.max(0, Math.floor((end - start) / 1000));
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
   return `${mm}:${ss}`;
@@ -176,6 +191,7 @@ export default function KDSByTablePage() {
   const [wsConnectedCount, setWsConnectedCount] = useState(0);
   const [lastEventLabel, setLastEventLabel] = useState("No events yet");
   const [lastEventAt, setLastEventAt] = useState(null);
+  const [, setNowTick] = useState(0);
 
   const socketsRef = useRef({});
   const reconnectTimersRef = useRef({});
@@ -184,6 +200,14 @@ export default function KDSByTablePage() {
   const alertTimerRef = useRef(null);
   const liveWsEnabledRef = useRef(false);
   const today = todayInBangkok();
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowTick((value) => value + 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -569,7 +593,7 @@ export default function KDSByTablePage() {
                         Order {group.orderNumber}
                       </div>
                     </div>
-                    <div className="text-sm font-black text-slate-600">{prettyAge(group.createdAt)}</div>
+                    <div className="text-sm font-black text-slate-600">{prettyAge(group.createdAt, isDone ? group.completedAt : null)}</div>
                   </div>
 
                   <div className="bg-white/95 px-5 py-5">
