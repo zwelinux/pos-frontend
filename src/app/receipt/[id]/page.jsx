@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { API } from "@/lib/api";
 import { authFetch } from "@/lib/auth";
 import { groupModifiersForDisplay } from "@/lib/modifierDisplay";
@@ -40,6 +40,7 @@ const WarningBtn = (p) => (
 
 export default function Receipt() {
   const { id } = useParams();
+  const router = useRouter();
   const [order, setOrder] = useState(null);
   const [comps, setComps] = useState([]);
   const [err, setErr] = useState("");
@@ -160,6 +161,15 @@ export default function Receipt() {
     } finally {
       setTabBusy(false);
     }
+  }
+
+  function backToTable() {
+    const hasTable = !!(order?.table?.id || order?.table_name);
+    if (hasTable) {
+      router.push("/?showOrder=1");
+      return;
+    }
+    router.push(`/tables?next=${encodeURIComponent("/?showOrder=1")}`);
   }
 
   if (err) return (
@@ -431,6 +441,14 @@ export default function Receipt() {
 
         {/* Action Buttons Side HUD (Screen HUD only) */}
         <div className="w-full max-w-[420px] flex flex-col gap-6 no-print lg:sticky lg:top-12">
+          <button
+            onClick={backToTable}
+            className="w-full h-16 flex items-center justify-center gap-3 rounded-[2.2rem] glass border-white/40 text-slate-700 font-black uppercase tracking-[0.2em] text-sm hover:bg-white/80 transition-all hover:-translate-y-1 active:translate-y-0 shadow-xl shadow-slate-100"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h11" /></svg>
+            Back To Table
+          </button>
+
           {!isPaid && !isVoided && (
             <>
               <div className="grid grid-cols-2 gap-4">
