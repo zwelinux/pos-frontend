@@ -96,10 +96,7 @@ export default function TablesPage() {
         <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
           Select <span className="text-indigo-600">Table.</span>
         </h1>
-        <p className="mt-4 text-slate-500 font-medium text-lg">
-          Choose an active table to manage orders or start a new session.
-        </p>
-        <div className="mt-5 flex flex-col gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 md:flex-row md:items-center">
+        {/* <div className="mt-5 flex flex-col gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 md:flex-row md:items-center">
           <div className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-emerald-700 md:justify-start">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             Live sync every {Math.floor(LIVE_SYNC_MS / 1000)}s
@@ -107,7 +104,7 @@ export default function TablesPage() {
           <div>
             Last update: {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString() : "Syncing..."}
           </div>
-        </div>
+        </div> */}
       </header>
        
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6">
