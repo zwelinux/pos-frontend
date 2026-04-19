@@ -345,6 +345,11 @@ export default function Receipt() {
         <div className="receipt-paper max-w-[340px] w-full shrink-0 animate-slide-down md:sticky md:top-8">
           {/* Physical Paper Visuals */}
           <div className="relative bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 p-8 pt-10 overflow-hidden">
+            {!isPaid && !isVoided && (
+              <div className="absolute right-5 top-5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-amber-700">
+                Not Paid Yet
+              </div>
+            )}
             
             {/* Header Branding */}
             <header className="text-center mb-8">
@@ -557,14 +562,14 @@ export default function Receipt() {
             </>
           )}
 
-          {(isPaid || isVoided) && (
+          {!isVoided && (
             <div className="text-center no-print w-full">
               <button 
                 onClick={() => window.print()} 
                 className="w-full h-20 flex items-center justify-center gap-3 rounded-[2.5rem] glass border-white/40 text-slate-700 font-black uppercase tracking-[0.2em] text-sm hover:bg-white/80 transition-all hover:-translate-y-1 active:translate-y-0 shadow-xl shadow-slate-100"
               >
                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                 Print Receipt Copy
+                 {isPaid ? "Print Receipt Copy" : "Print Current Session"}
               </button>
             </div>
           )}
@@ -655,9 +660,9 @@ export default function Receipt() {
           }
 
           .receipt-paper .bg-indigo-600,
+          .receipt-paper .bg-amber-50,
           .receipt-paper .bg-emerald-50,
           .receipt-paper .bg-rose-50,
-          .receipt-paper .bg-amber-50,
           .receipt-paper .bg-white,
           .receipt-paper .bg-slate-50\/50,
           .receipt-paper .bg-slate-50,
@@ -698,6 +703,13 @@ export default function Receipt() {
           .receipt-paper .text-amber-700 {
              color: #666 !important;
              opacity: 0.8;
+          }
+
+          .receipt-paper .absolute.right-5.top-5 {
+            border: 1px solid #a1a1aa !important;
+            padding: 1.5mm 2.5mm !important;
+            border-radius: 9999px !important;
+            background: transparent !important;
           }
 
           .receipt-paper .text-3xl {
